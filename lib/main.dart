@@ -1,17 +1,24 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'firebase_options.dart';
+import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/profile_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ),
+  );
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const PairingApp());
 }
@@ -31,7 +38,31 @@ class PairingApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const MainNavigation(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+// Слушает authStateChanges — сам переключает между AuthScreen и MainNavigation
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Color(0xFF0D0D0D),
+            body: Center(
+              child: CircularProgressIndicator(color: Color(0xFFC9A84C)),
+            ),
+          );
+        }
+        if (snapshot.data == null) return const AuthScreen();
+        return const MainNavigation();
+      },
     );
   }
 }
@@ -73,10 +104,7 @@ class _MainNavigationState extends State<MainNavigation> {
       decoration: BoxDecoration(
         color: const Color(0xFF111111),
         border: Border(
-          top: BorderSide(
-            color: Colors.white.withOpacity(0.07),
-            width: 1,
-          ),
+          top: BorderSide(color: Colors.white.withOpacity(0.07), width: 1),
         ),
       ),
       child: SafeArea(
@@ -95,11 +123,7 @@ class _MainNavigationState extends State<MainNavigation> {
     );
   }
 
-  Widget _navItem({
-    required int index,
-    required IconData icon,
-    required String label,
-  }) {
+  Widget _navItem({required int index, required IconData icon, required String label}) {
     final selected = _currentIndex == index;
     return Expanded(
       child: GestureDetector(
