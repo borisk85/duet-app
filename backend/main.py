@@ -47,7 +47,7 @@ app.add_middleware(
 )
 
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-MODEL = os.getenv("MODEL", "claude-haiku-4-5")
+MODEL = os.getenv("MODEL", "claude-haiku-4-5-20251001")
 
 BUDGET_MAP = {
     "budget":  "бюджетный сегмент (минимальная стоимость для данного типа напитка)",
@@ -129,22 +129,31 @@ def pair(request: Request, req: PairRequest):
 
     prompt = _build_prompt(req)
 
-    message = client.messages.create(
-        model=MODEL,
-        max_tokens=1200,         # 3 карточки × ~150 токенов + JSON обёртка
-        messages=[{"role": "user", "content": prompt}],
-    )
-
     try:
-        data = json.loads(message.content[0].text)
+        message = client.messages.create(
+            model=MODEL,
+            max_tokens=1200,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        # Убираем markdown-обёртку если модель всё же добавила ```json```
+        raw = message.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[-1]
+            raw = raw.rsplit("```", 1)[0].strip()
+
+        data = json.loads(raw)
         result = {
             "dish": req.dish,
             "mode": req.mode,
             "budget": req.budget,
+            "region": req.region,
             "results": data["results"][:3],
             "from_cache": False,
         }
         _cache_set(cache_key, result)
         return result
-    except Exception:
+    except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Ошибка обработки ответа AI")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

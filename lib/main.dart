@@ -116,7 +116,7 @@ class _MainNavigationState extends State<MainNavigation> {
               child: Icon(
                 icon,
                 size: 24,
-                color: selected ? _gold : Colors.white.withOpacity(0.3),
+                color: selected ? _gold : Colors.white.withOpacity(0.55),
               ),
             ),
             const SizedBox(height: 4),
@@ -124,7 +124,7 @@ class _MainNavigationState extends State<MainNavigation> {
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: selected ? _gold : Colors.white.withOpacity(0.3),
+                color: selected ? _gold : Colors.white.withOpacity(0.55),
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
               ),
             ),

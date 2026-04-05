@@ -53,6 +53,11 @@ class StorageService {
     return valid.map((s) => PairingResponse.fromJson(jsonDecode(s))).toList();
   }
 
+  static Future<void> clearHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_historyKey);
+  }
+
   static Future<void> saveToHistory(PairingResponse response) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_historyKey) ?? [];

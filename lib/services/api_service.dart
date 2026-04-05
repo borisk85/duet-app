@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/pairing_result.dart';
 
 class ApiService {
@@ -10,8 +11,10 @@ class ApiService {
     required String dish,
     required String mode,
     required String budget,
-    String region = 'СНГ',
   }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final region = prefs.getString('region') ?? 'СНГ';
+
     final response = await http.post(
       Uri.parse('$_baseUrl/pair'),
       headers: {'Content-Type': 'application/json'},
@@ -26,9 +29,15 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
       return PairingResponse.fromJson(data);
+    } else if (response.statusCode == 429) {
+      throw Exception('Достигнут дневной лимит. Обновите до Premium для безлимита.');
     } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['detail'] ?? 'Ошибка сервера');
+      try {
+        final error = jsonDecode(response.body);
+        throw Exception(error['detail'] ?? 'Ошибка сервера');
+      } catch (_) {
+        throw Exception('Сервис временно недоступен. Попробуйте через минуту.');
+      }
     }
   }
 }
