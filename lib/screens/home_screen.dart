@@ -1,0 +1,361 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../services/api_service.dart';
+import '../services/storage_service.dart';
+import 'result_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController _controller = TextEditingController();
+  bool _isFoodToAlcohol = true;
+  int _budgetIndex = 1; // 0 = Бюджетно, 1 = Средний, 2 = Премиум
+  bool _isLoading = false;
+
+  static const _budgetLabels = ['Бюджетно', 'Средний', 'Премиум'];
+  static const _budgetIcons = ['💰', '💰💰', '💰💰💰'];
+
+  static const _gold = Color(0xFFC9A84C);
+  static const _bg = Color(0xFF0D0D0D);
+  static const _card = Color(0xFF1A1A1A);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _bg,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+              _buildLogo(),
+              const SizedBox(height: 32),
+              _buildToggle(),
+              const SizedBox(height: 28),
+              _buildLabel(),
+              const SizedBox(height: 12),
+              _buildInputField(),
+              const SizedBox(height: 12),
+              _buildHints(),
+              const SizedBox(height: 24),
+              _buildBudgetSelector(),
+              const Spacer(),
+              _buildButton(),
+              const SizedBox(height: 36),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return const Text(
+      'Дуэт',
+      style: TextStyle(
+        color: _gold,
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.5,
+      ),
+    );
+  }
+
+  Widget _buildToggle() {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          _toggleOption(
+            label: 'Еда → Напиток',
+            selected: _isFoodToAlcohol,
+            onTap: () => setState(() => _isFoodToAlcohol = true),
+          ),
+          _toggleOption(
+            label: 'Напиток → Еда',
+            selected: !_isFoodToAlcohol,
+            onTap: () => setState(() => _isFoodToAlcohol = false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _toggleOption({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: selected ? _gold : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? _bg : Colors.white.withOpacity(0.4),
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _isFoodToAlcohol ? 'Что у вас на столе?' : 'Какой напиток хотите?',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _isFoodToAlcohol
+              ? 'Опишите подробнее — чем точнее, тем лучше подборка'
+              : 'Укажите напиток — подберем закуски и блюда',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.35),
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInputField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _gold.withOpacity(0.25),
+          width: 1,
+        ),
+      ),
+      child: TextField(
+        controller: _controller,
+        style: const TextStyle(color: Colors.white, fontSize: 15),
+        maxLines: 4,
+        minLines: 4,
+        decoration: InputDecoration(
+          hintText: _isFoodToAlcohol
+              ? 'Например: говяжий стейк medium rare, рамен с курицей, сырная тарелка с виноградом...'
+              : 'Например: красное сухое вино, односолодовый виски, русская водка...',
+          hintStyle: TextStyle(
+            color: Colors.white.withOpacity(0.22),
+            fontSize: 14,
+          ),
+          contentPadding: const EdgeInsets.all(18),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHints() {
+    final hints = _isFoodToAlcohol
+        ? ['🥩 Говяжий стейк', '🍣 Суши', '🫕 Рамен с курицей', '🧀 Сырная тарелка']
+        : ['🍷 Красное вино', '🥃 Виски', '🍺 Пиво', '🥂 Шампанское'];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: hints.map((hint) {
+        return GestureDetector(
+          onTap: () => setState(() {
+            _controller.text = hint.substring(3);
+          }),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: _card,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
+            ),
+            child: Text(
+              hint,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.45),
+                fontSize: 13,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildBudgetSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Бюджет',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: List.generate(3, (i) {
+            final selected = _budgetIndex == i;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _budgetIndex = i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: selected ? _gold.withOpacity(0.15) : _card,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: selected ? _gold : Colors.white.withOpacity(0.06),
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        _budgetIcons[i],
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _budgetLabels[i],
+                        style: TextStyle(
+                          color: selected ? _gold : Colors.white.withOpacity(0.4),
+                          fontSize: 12,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _onPair() async {
+    final dish = _controller.text.trim();
+    if (dish.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isFoodToAlcohol ? 'Введите блюдо' : 'Введите напиток'),
+          backgroundColor: Colors.red.shade800,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
+    HapticFeedback.mediumImpact();
+    setState(() => _isLoading = true);
+
+    final budgetKeys = ['budget', 'medium', 'premium'];
+
+    try {
+      final result = await ApiService.pair(
+        dish: dish,
+        mode: _isFoodToAlcohol ? 'food_to_alcohol' : 'alcohol_to_food',
+        budget: budgetKeys[_budgetIndex],
+      );
+
+      await StorageService.saveToHistory(result);
+
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ResultScreen(
+              response: result,
+              onSave: () => StorageService.saveToFavorites(result),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Ошибка: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Widget _buildButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _onPair,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _gold,
+          foregroundColor: _bg,
+          disabledBackgroundColor: _gold.withOpacity(0.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 0,
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  color: Color(0xFF0D0D0D),
+                  strokeWidth: 2.5,
+                ),
+              )
+            : Text(
+                _isFoodToAlcohol ? 'Подобрать напиток' : 'Подобрать блюда',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+              ),
+      ),
+    );
+  }
+}

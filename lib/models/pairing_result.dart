@@ -1,0 +1,81 @@
+class PairingResult {
+  final String alcoholType;
+  final String alcoholTypeEmoji;
+  final String name;
+  final String brand;
+  final String reason;
+  final String priceRange;
+  final String servingTip;
+
+  const PairingResult({
+    required this.alcoholType,
+    required this.alcoholTypeEmoji,
+    required this.name,
+    required this.brand,
+    required this.reason,
+    required this.priceRange,
+    required this.servingTip,
+  });
+
+  factory PairingResult.fromJson(Map<String, dynamic> json) {
+    return PairingResult(
+      alcoholType: json['alcohol_type'] ?? '',
+      alcoholTypeEmoji: json['alcohol_type_emoji'] ?? '🍷',
+      name: json['name'] ?? '',
+      brand: json['brand'] ?? '',
+      reason: json['reason'] ?? '',
+      priceRange: json['price_range'] ?? '',
+      servingTip: json['serving_tip'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'alcohol_type': alcoholType,
+    'alcohol_type_emoji': alcoholTypeEmoji,
+    'name': name,
+    'brand': brand,
+    'reason': reason,
+    'price_range': priceRange,
+    'serving_tip': servingTip,
+  };
+}
+
+class PairingResponse {
+  final String dish;
+  final String mode;
+  final String budget;
+  final String region;
+  final List<PairingResult> results;
+  final DateTime createdAt;
+
+  PairingResponse({
+    required this.dish,
+    required this.mode,
+    required this.budget,
+    this.region = 'СНГ',
+    required this.results,
+    required this.createdAt,
+  });
+
+  factory PairingResponse.fromJson(Map<String, dynamic> json) {
+    return PairingResponse(
+      dish: json['dish'] ?? '',
+      mode: json['mode'] ?? 'food_to_alcohol',
+      budget: json['budget'] ?? 'medium',
+      region: json['region'] ?? 'СНГ',
+      results: (json['results'] as List<dynamic>? ?? [])
+          .map((r) => PairingResult.fromJson(r))
+          .toList(),
+      createdAt: DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'dish': dish,
+    'mode': mode,
+    'budget': budget,
+    'region': region,
+    'results': results.map((r) => r.toJson()).toList(),
+    'created_at': createdAt.toIso8601String(),
+  };
+}
