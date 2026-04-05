@@ -8,7 +8,8 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from pydantic import BaseModel, field_validator
-from anthropic import Anthropic
+from anthropic import Anthropic, AsyncAnthropic
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -47,6 +48,7 @@ app.add_middleware(
 )
 
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+async_client = AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 MODEL = os.getenv("MODEL", "claude-haiku-4-5-20251001")
 
 BUDGET_MAP = {
@@ -113,7 +115,7 @@ def health():
     return {"status": "ok", "cache_size": len(_cache)}
 
 @app.post("/pair")
-@limiter.limit("10/day", key_func=lambda req: get_remote_address(req))
+@limiter.limit("10/day")
 def pair(request: Request, req: PairRequest):
     # Платные пользователи не ограничены rate limit'ом
     # (лимит выше всё равно применится, но для premium можно поднять отдельно)
@@ -157,3 +159,52 @@ def pair(request: Request, req: PairRequest):
         raise HTTPException(status_code=500, detail="Ошибка обработки ответа AI")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/pair/stream")
+@limiter.limit("10/day")
+async def pair_stream(request: Request, req: PairRequest):
+    cache_key = hashlib.md5(
+        f"{req.dish.lower()}|{req.mode}|{req.budget}|{req.region}".encode()
+    ).hexdigest()
+
+    cached = _cache_get(cache_key)
+    if cached:
+        async def from_cache():
+            yield json.dumps(cached)
+        return StreamingResponse(from_cache(), media_type="text/plain")
+
+    prompt = _build_prompt(req)
+
+    async def generate():
+        accumulated = ""
+        try:
+            async with async_client.messages.stream(
+                model=MODEL,
+                max_tokens=1200,
+                messages=[{"role": "user", "content": prompt}],
+            ) as stream:
+                async for text in stream.text_stream:
+                    accumulated += text
+                    yield text
+        except Exception as e:
+            yield json.dumps({"error": str(e)})
+            return
+
+        # Кешируем после завершения стрима
+        try:
+            raw = accumulated.strip()
+            if raw.startswith("```"):
+                raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+            data = json.loads(raw)
+            result = {
+                "dish": req.dish,
+                "mode": req.mode,
+                "budget": req.budget,
+                "region": req.region,
+                "results": data["results"][:3],
+            }
+            _cache_set(cache_key, result)
+        except Exception:
+            pass
+
+    return StreamingResponse(generate(), media_type="text/plain")

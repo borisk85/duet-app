@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'result_screen.dart';
 
@@ -15,7 +14,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _controller = TextEditingController();
   bool _isFoodToAlcohol = true;
   int _budgetIndex = 1; // 0 = Бюджетно, 1 = Средний, 2 = Премиум
-  bool _isLoading = false;
+  bool _navigating = false;
 
   static const _budgetLabels = ['Бюджетно', 'Средний', 'Премиум'];
   static const _budgetIcons = ['💰', '💰💰', '💰💰💰'];
@@ -288,45 +287,30 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
+    if (_navigating) return;
+    setState(() => _navigating = true);
+
     HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
 
     final budgetKeys = ['budget', 'medium', 'premium'];
 
-    try {
-      final result = await ApiService.pair(
-        dish: dish,
-        mode: _isFoodToAlcohol ? 'food_to_alcohol' : 'alcohol_to_food',
-        budget: budgetKeys[_budgetIndex],
+    if (mounted) {
+      await Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => ResultScreen(
+            dish: dish,
+            mode: _isFoodToAlcohol ? 'food_to_alcohol' : 'alcohol_to_food',
+            budget: budgetKeys[_budgetIndex],
+          ),
+          transitionsBuilder: (_, animation, __, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 220),
+        ),
       );
-
-      await StorageService.saveToHistory(result);
-
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ResultScreen(
-              response: result,
-              onSave: () => StorageService.saveToFavorites(result),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ошибка: ${e.toString().replaceAll('Exception: ', '')}'),
-            backgroundColor: Colors.red.shade800,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
+
+    if (mounted) setState(() => _navigating = false);
   }
 
   Widget _buildButton() {
@@ -334,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity,
       height: 54,
       child: ElevatedButton(
-        onPressed: _isLoading ? null : _onPair,
+        onPressed: _navigating ? null : _onPair,
         style: ElevatedButton.styleFrom(
           backgroundColor: _gold,
           foregroundColor: _bg,
@@ -342,19 +326,10 @@ class _HomeScreenState extends State<HomeScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
         ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  color: Color(0xFF0D0D0D),
-                  strokeWidth: 2.5,
-                ),
-              )
-            : Text(
-                _isFoodToAlcohol ? 'Подобрать напиток' : 'Подобрать блюда',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3),
-              ),
+        child: Text(
+          _isFoodToAlcohol ? 'Подобрать напиток' : 'Подобрать блюда',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+        ),
       ),
     );
   }
