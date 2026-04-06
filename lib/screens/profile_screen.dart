@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -87,6 +88,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 24),
                 _buildSection('Подписка', _buildSubscription()),
+                const SizedBox(height: 24),
+                _buildSignOutButton(),
                 const SizedBox(height: 32),
               ],
             ),
@@ -191,6 +194,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildSignOutButton() {
+    final user = AuthService.currentUser;
+    final isAnon = user?.isAnonymous ?? true;
+    final label = isAnon ? 'Аноним' : (user?.email ?? '');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (label.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              label,
+              style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 13),
+            ),
+          ),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: OutlinedButton(
+            onPressed: () async {
+              await AuthService.signOut();
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.red.shade400,
+              side: BorderSide(color: Colors.red.shade900),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Выйти из аккаунта'),
+          ),
+        ),
+      ],
     );
   }
 

@@ -41,6 +41,17 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() => _loadingAnon = true);
     try {
       await AuthService.signInAnonymously();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Нет подключения к сети. Проверьте интернет.'),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _loadingAnon = false);
     }
