@@ -34,3 +34,13 @@ CREATE TABLE IF NOT EXISTS favorites (
 
 CREATE INDEX IF NOT EXISTS idx_pairings_uid_date ON pairings (firebase_uid, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_favorites_uid      ON favorites (firebase_uid);
+
+-- Персистентный кеш подборок (переживает redeploy Railway, не сбрасывается между запусками контейнера)
+-- Ключ — md5 от dish + mode + budget + region + detail_level
+-- TTL 24 часа, чистится вероятностно при INSERT (5% шанс)
+CREATE TABLE IF NOT EXISTS pairing_cache (
+    cache_key  TEXT      PRIMARY KEY,
+    result     JSONB     NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_pairing_cache_created ON pairing_cache (created_at);
