@@ -21,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Set<String> _preferredTypes = {};
   String _detailLevel = 'standard';
   bool _loading = true;
+  bool _regionExpanded = false;
   bool _isPremium = false;
   int _pairingCount = 0;
   int _pairingLimit = 10;
@@ -91,6 +92,53 @@ class _ProfileScreenState extends State<ProfileScreen>
     await prefs.setString('detail_level', _detailLevel);
   }
 
+  Future<void> _confirmSignOut() async {
+    HapticFeedback.lightImpact();
+    final user = AuthService.currentUser;
+    final isAnon = user?.isAnonymous ?? true;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.white.withOpacity(0.08)),
+        ),
+        title: const Text(
+          'Выйти из аккаунта?',
+          style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          isAnon
+              ? 'Вы войдёте как новый анонимный пользователь. Избранное и история будут потеряны навсегда.'
+              : 'Вы сможете войти снова в любой момент. Избранное и история сохранятся.',
+          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.4),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Отмена',
+              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'Выйти',
+              style: TextStyle(color: Colors.red.shade400, fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await AuthService.signOut();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,9 +157,11 @@ class _ProfileScreenState extends State<ProfileScreen>
               padding: const EdgeInsets.all(20),
               children: [
                 _buildSection('Регион', _buildRegionSelector()),
-                const SizedBox(height: 24),
-                _buildSection('Детализация подборок', _buildDetailLevelSelector()),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
+                _buildSection('Детализация', _buildDetailLevelSelector()),
+                const SizedBox(height: 20),
+                Divider(color: Colors.white.withOpacity(0.06), height: 1, thickness: 1),
+                const SizedBox(height: 20),
                 _buildSection(
                   'Предпочтения',
                   Column(
@@ -126,7 +176,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
                 _buildSection('Подписка', _buildSubscription()),
                 const SizedBox(height: 24),
                 _buildSignOutButton(),
@@ -158,31 +208,88 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildRegionSelector() {
     return Container(
       decoration: BoxDecoration(color: _card, borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
       child: Column(
-        children: _regions.map((r) {
-          final selected = _region == r;
-          return GestureDetector(
+        children: [
+          // Свёрнутая шапка — текущий регион + стрелка
+          GestureDetector(
             onTap: () {
-              setState(() => _region = r);
-              _save();
+              HapticFeedback.lightImpact();
+              setState(() => _regionExpanded = !_regionExpanded);
             },
-            child: Container(
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
-              ),
               child: Row(
                 children: [
+                  const Icon(Icons.public_rounded, color: _gold, size: 22),
+                  const SizedBox(width: 14),
                   Expanded(
-                    child: Text(r, style: const TextStyle(color: Colors.white, fontSize: 15)),
+                    child: Text(
+                      _region,
+                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w500),
+                    ),
                   ),
-                  if (selected)
-                    const Icon(Icons.check_rounded, color: _gold, size: 20),
+                  AnimatedRotation(
+                    turns: _regionExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.white.withOpacity(0.5),
+                      size: 22,
+                    ),
+                  ),
                 ],
               ),
             ),
-          );
-        }).toList(),
+          ),
+          // Раскрывающийся список
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            child: _regionExpanded
+                ? Column(
+                    children: _regions.map((r) {
+                      final selected = _region == r;
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          setState(() {
+                            _region = r;
+                            _regionExpanded = false;
+                          });
+                          _save();
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+                          ),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 36),
+                              Expanded(
+                                child: Text(
+                                  r,
+                                  style: TextStyle(
+                                    color: selected ? _gold : Colors.white.withOpacity(0.85),
+                                    fontSize: 14,
+                                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                              if (selected)
+                                const Icon(Icons.check_rounded, color: _gold, size: 18),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
+        ],
       ),
     );
   }
@@ -192,20 +299,20 @@ class _ProfileScreenState extends State<ProfileScreen>
       {
         'key': 'simple',
         'label': 'Просто',
-        'desc': 'Краткое объяснение для новичка',
-        'icon': Icons.lightbulb_outline_rounded,
+        'desc': 'Краткое объяснение без терминов',
+        'icon': Icons.bolt_rounded,
       },
       {
         'key': 'standard',
         'label': 'Стандарт',
-        'desc': 'Объяснение почему сочетается + совет по подаче',
-        'icon': Icons.tune_rounded,
+        'desc': 'Почему сочетается + совет по подаче',
+        'icon': Icons.balance_rounded,
       },
       {
         'key': 'expert',
         'label': 'Эксперт',
         'desc': 'Сорт, регион, выдержка, температура, бокал',
-        'icon': Icons.workspace_premium_rounded,
+        'icon': Icons.wine_bar_rounded,
       },
     ];
     return Container(
@@ -382,9 +489,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           width: double.infinity,
           height: 48,
           child: OutlinedButton(
-            onPressed: () async {
-              await AuthService.signOut();
-            },
+            onPressed: _confirmSignOut,
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.red.shade400,
               side: BorderSide(color: Colors.red.shade900),
@@ -458,18 +563,28 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
             const SizedBox(height: 14),
-            SizedBox(
+            Container(
               width: double.infinity,
-              height: 46,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _gold,
-                  foregroundColor: _bg,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  elevation: 0,
-                ),
-                child: const Text('Перейти на Premium', style: TextStyle(fontWeight: FontWeight.w700)),
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              decoration: BoxDecoration(
+                color: _gold.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: _gold.withOpacity(0.4), width: 1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.schedule_rounded, color: _gold, size: 16),
+                  SizedBox(width: 8),
+                  Text(
+                    'Premium скоро будет доступен',
+                    style: TextStyle(
+                      color: _gold,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
