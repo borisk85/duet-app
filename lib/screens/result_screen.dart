@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/pairing_result.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
-import '../services/api_service.dart';
+import 'paywall_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   // Для истории / избранного — уже готовый ответ
@@ -125,6 +125,20 @@ class _ResultScreenState extends State<ResultScreen>
           _response = response;
           _isLoading = false;
         });
+      }
+    } on PairingLimitException catch (_) {
+      // Лимит подборок исчерпан — редиректим на Paywall с персонализацией.
+      // pushReplacement чтобы пользователь не мог вернуться кнопкой "Назад"
+      // на пустой экран загрузки.
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => PaywallScreen(
+              dish: widget.dish!,
+              mode: widget.mode!,
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {

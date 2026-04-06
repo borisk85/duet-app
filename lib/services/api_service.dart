@@ -5,6 +5,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/pairing_result.dart';
 import 'auth_service.dart';
 
+/// Специальный exception для лимита подборок (HTTP 429).
+/// Flutter ловит его отдельно и редиректит на Paywall вместо обычного SnackBar.
+class PairingLimitException implements Exception {
+  final String message;
+  const PairingLimitException([this.message = 'Достигнут лимит подборок']);
+  @override
+  String toString() => message;
+}
+
 class ApiService {
   static const String _baseUrl = 'https://duet-app-production.up.railway.app';
 
@@ -43,7 +52,8 @@ class ApiService {
       final streamed = await client.send(request).timeout(const Duration(seconds: 30));
 
       if (streamed.statusCode == 429) {
-        throw Exception('Достигнут лимит подборок. Перейдите на Premium для безлимитного доступа.');
+        // Специальный exception — ResultScreen перехватит и редиректнет на Paywall
+        throw const PairingLimitException();
       }
       if (streamed.statusCode == 401) {
         throw Exception('Ошибка авторизации. Попробуйте выйти и войти снова.');
