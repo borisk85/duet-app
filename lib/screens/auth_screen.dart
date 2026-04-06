@@ -96,7 +96,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Персональный сомелье',
+          'AI-эксперт по напиткам к еде',
           style: TextStyle(
             color: Colors.white.withOpacity(0.45),
             fontSize: 16,
