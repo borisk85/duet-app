@@ -34,9 +34,53 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   void _remove(int index) {
-    final item = _favorites[index];
+    final removedItem = _favorites[index];
+    final removedIndex = index;
     setState(() => _favorites.removeAt(index));
-    if (item.id != null) ApiService.removeFavorite(item.id!);
+
+    bool undone = false;
+
+    // Закрываем предыдущий SnackBar если есть — это зафиксирует прошлое удаление через .closed
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+    final controller = ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Удалено',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        ),
+        backgroundColor: _card,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 80),
+        duration: const Duration(seconds: 3),
+        elevation: 0,
+        action: SnackBarAction(
+          label: 'Отменить',
+          textColor: _gold,
+          onPressed: () {
+            undone = true;
+            setState(() {
+              if (removedIndex <= _favorites.length) {
+                _favorites.insert(removedIndex, removedItem);
+              } else {
+                _favorites.add(removedItem);
+              }
+            });
+          },
+        ),
+      ),
+    );
+
+    controller.closed.then((reason) {
+      // Если пользователь не нажал "Отменить" — фиксируем удаление в БД
+      if (!undone && removedItem.id != null) {
+        ApiService.removeFavorite(removedItem.id!);
+      }
+    });
   }
 
   @override
@@ -127,14 +171,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           child: Container(
             width: 80,
             decoration: const BoxDecoration(
-              color: Color(0xFF8B0000),
+              color: Color(0xFF5C1010),
               borderRadius: BorderRadius.only(
                 topRight: Radius.circular(14),
                 bottomRight: Radius.circular(14),
               ),
             ),
-            child: const Center(
-              child: Icon(Icons.delete_rounded, color: Colors.white, size: 20),
+            child: Center(
+              child: Icon(
+                Icons.delete_rounded,
+                color: Colors.white.withOpacity(0.85),
+                size: 20,
+              ),
             ),
           ),
         ),
