@@ -98,12 +98,12 @@ class _ProfileScreenState extends State<ProfileScreen>
     final isAnon = user?.isAnonymous ?? true;
     final confirmed = await showDialog<bool>(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withOpacity(0.75),
       builder: (ctx) => AlertDialog(
-        backgroundColor: _card,
+        backgroundColor: const Color(0xFF1E1E1E),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.white.withOpacity(0.08)),
+          side: BorderSide(color: Colors.white.withOpacity(0.12), width: 1),
         ),
         title: const Text(
           'Выйти из аккаунта?',
@@ -562,30 +562,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                 fontSize: 12,
               ),
             ),
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 13),
-              decoration: BoxDecoration(
-                color: _gold.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _gold.withOpacity(0.4), width: 1),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.schedule_rounded, color: _gold, size: 16),
-                  SizedBox(width: 8),
-                  Text(
-                    'Premium скоро будет доступен',
-                    style: TextStyle(
-                      color: _gold,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.schedule_rounded, color: Colors.white.withOpacity(0.35), size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  'Premium скоро будет доступен',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 12,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ],

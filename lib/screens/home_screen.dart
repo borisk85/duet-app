@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../services/storage_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'result_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,10 +18,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   static const _budgetLabels = ['Бюджетно', 'Средний', 'Премиум'];
   static const _budgetIcons = ['💰', '💰💰', '💰💰💰'];
+  static const _budgetKeys = ['budget', 'medium', 'premium'];
 
   static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0D0D0D);
   static const _card = Color(0xFF1A1A1A);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBudget();
+  }
+
+  Future<void> _loadBudget() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('budget') ?? 'medium';
+    final idx = _budgetKeys.indexOf(saved);
+    if (idx != -1 && mounted) {
+      setState(() => _budgetIndex = idx);
+    }
+  }
+
+  Future<void> _saveBudget(int idx) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('budget', _budgetKeys[idx]);
+  }
 
   @override
   void dispose() {
@@ -164,12 +185,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildInputField() {
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: _card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _gold.withOpacity(0.25),
-          width: 1,
+          color: _gold.withOpacity(0.28),
+          width: 1.5,
+          strokeAlign: BorderSide.strokeAlignInside,
         ),
       ),
       child: TextField(
@@ -244,7 +267,10 @@ class _HomeScreenState extends State<HomeScreen> {
             final selected = _budgetIndex == i;
             return Expanded(
               child: GestureDetector(
-                onTap: () => setState(() => _budgetIndex = i),
+                onTap: () {
+                  setState(() => _budgetIndex = i);
+                  _saveBudget(i);
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
@@ -302,8 +328,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     HapticFeedback.mediumImpact();
 
-    final budgetKeys = ['budget', 'medium', 'premium'];
-
     if (mounted) {
       await Navigator.push(
         context,
@@ -311,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
           pageBuilder: (_, __, ___) => ResultScreen(
             dish: dish,
             mode: _isFoodToAlcohol ? 'food_to_alcohol' : 'alcohol_to_food',
-            budget: _isFoodToAlcohol ? budgetKeys[_budgetIndex] : 'medium',
+            budget: _isFoodToAlcohol ? _budgetKeys[_budgetIndex] : 'medium',
           ),
           transitionsBuilder: (_, animation, __, child) =>
               FadeTransition(opacity: animation, child: child),
