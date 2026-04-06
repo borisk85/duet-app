@@ -40,6 +40,7 @@ class _ResultScreenState extends State<ResultScreen>
 
   PairingResponse? _response;
   bool _isLoading = true;
+  bool _isSaved = false;
   String? _error;
 
   late final AnimationController _pulseController;
@@ -380,8 +381,6 @@ class _ResultScreenState extends State<ResultScreen>
                 Text(
                   result.reason,
                   style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.5),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
                 _buildBottomRow(result),
@@ -423,7 +422,7 @@ class _ResultScreenState extends State<ResultScreen>
               children: [
                 Row(
                   children: [
-                    Text(result.alcoholTypeEmoji, style: const TextStyle(fontSize: 14)),
+                    Text(result.resolvedEmoji, style: const TextStyle(fontSize: 14)),
                     const SizedBox(width: 4),
                     Text(
                       result.alcoholType,
@@ -519,17 +518,10 @@ class _ResultScreenState extends State<ResultScreen>
       width: double.infinity,
       height: 54,
       child: ElevatedButton.icon(
-        onPressed: () {
+        onPressed: _isSaved ? null : () {
           HapticFeedback.mediumImpact();
           if (_response != null) StorageService.saveToFavorites(_response!);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Сохранено в избранное'),
-              backgroundColor: _gold,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-          );
+          setState(() => _isSaved = true);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: _gold,
@@ -537,10 +529,10 @@ class _ResultScreenState extends State<ResultScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
         ),
-        icon: const Icon(Icons.star_rounded, size: 20),
-        label: const Text(
-          'Сохранить в избранное',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        icon: Icon(_isSaved ? Icons.check_rounded : Icons.star_rounded, size: 20),
+        label: Text(
+          _isSaved ? 'Сохранено' : 'Сохранить в избранное',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
     );

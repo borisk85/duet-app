@@ -4,7 +4,8 @@ import '../services/storage_service.dart';
 import 'result_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
-  const FavoritesScreen({super.key});
+  final VoidCallback? onGoHome;
+  const FavoritesScreen({super.key, this.onGoHome});
 
   @override
   State<FavoritesScreen> createState() => _FavoritesScreenState();
@@ -82,7 +83,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: widget.onGoHome,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _gold,
                   foregroundColor: _bg,
@@ -141,7 +142,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           child: Row(
             children: [
               Text(
-                firstResult?.alcoholTypeEmoji ?? '🍷',
+                firstResult?.resolvedEmoji ?? '🍷',
                 style: const TextStyle(fontSize: 32),
               ),
               const SizedBox(width: 14),

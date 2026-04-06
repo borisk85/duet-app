@@ -76,16 +76,11 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+  int _favoritesEpoch = 0;
+  int _historyEpoch = 0;
 
   static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0D0D0D);
-
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    FavoritesScreen(),
-    HistoryScreen(),
-    ProfileScreen(),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +88,12 @@ class _MainNavigationState extends State<MainNavigation> {
       backgroundColor: _bg,
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: [
+          const HomeScreen(),
+          FavoritesScreen(key: ValueKey(_favoritesEpoch), onGoHome: () => setState(() => _currentIndex = 0)),
+          HistoryScreen(key: ValueKey(_historyEpoch)),
+          const ProfileScreen(),
+        ],
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
@@ -129,7 +129,11 @@ class _MainNavigationState extends State<MainNavigation> {
       child: GestureDetector(
         onTap: () {
           HapticFeedback.lightImpact();
-          setState(() => _currentIndex = index);
+          setState(() {
+            if (index == 1) _favoritesEpoch++;
+            if (index == 2) _historyEpoch++;
+            _currentIndex = index;
+          });
         },
         behavior: HitTestBehavior.opaque,
         child: Column(

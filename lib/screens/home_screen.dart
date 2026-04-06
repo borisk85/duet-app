@@ -34,28 +34,36 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 40),
-              _buildLogo(),
-              const SizedBox(height: 32),
-              _buildToggle(),
-              const SizedBox(height: 28),
-              _buildLabel(),
-              const SizedBox(height: 12),
-              _buildInputField(),
-              const SizedBox(height: 12),
-              _buildHints(),
-              const SizedBox(height: 24),
-              _buildBudgetSelector(),
-              const Spacer(),
-              _buildButton(),
-              const SizedBox(height: 36),
-            ],
-          ),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40),
+                    _buildLogo(),
+                    const SizedBox(height: 32),
+                    _buildToggle(),
+                    const SizedBox(height: 28),
+                    _buildLabel(),
+                    const SizedBox(height: 12),
+                    _buildInputField(),
+                    const SizedBox(height: 12),
+                    _buildHints(),
+                    const SizedBox(height: 24),
+                    _buildBudgetSelector(),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 36),
+              child: _buildButton(),
+            ),
+          ],
         ),
       ),
     );

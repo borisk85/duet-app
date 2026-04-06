@@ -148,7 +148,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: Row(
           children: [
             Text(
-              firstResult?.alcoholTypeEmoji ?? '🍷',
+              firstResult?.resolvedEmoji ?? '🍷',
               style: const TextStyle(fontSize: 28),
             ),
             const SizedBox(width: 12),

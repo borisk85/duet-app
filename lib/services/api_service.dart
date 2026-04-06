@@ -5,8 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/pairing_result.dart';
 
 class ApiService {
-  // 10.0.2.2 — это localhost для Android эмулятора
-  static const String _baseUrl = 'http://10.0.2.2:8000';
+  static const String _baseUrl = 'https://duet-app-production.up.railway.app';
 
   static Future<PairingResponse> pair({
     required String dish,

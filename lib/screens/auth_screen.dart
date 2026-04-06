@@ -66,9 +66,9 @@ class _AuthScreenState extends State<AuthScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
             children: [
-              const Spacer(flex: 2),
-              _buildLogo(),
               const Spacer(flex: 3),
+              _buildLogo(),
+              const Spacer(flex: 2),
               _buildGoogleButton(),
               const SizedBox(height: 16),
               _buildAnonButton(),

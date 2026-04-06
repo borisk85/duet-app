@@ -148,7 +148,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildAlcoholGrid() {
-    return Wrap(
+    final count = _preferredTypes.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (count > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              '$count/3',
+              style: TextStyle(
+                color: count == 3 ? _gold : Colors.white.withOpacity(0.35),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        Wrap(
       spacing: 8,
       runSpacing: 8,
       children: _alcoholTypes.map((type) {
@@ -156,6 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final selected = _preferredTypes.contains(key);
         return GestureDetector(
           onTap: () {
+            if (!selected && _preferredTypes.length >= 3) return;
             setState(() {
               if (selected) {
                 _preferredTypes.remove(key);
@@ -194,6 +211,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       }).toList(),
+        ),
+      ],
     );
   }
 
@@ -258,7 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: Colors.white.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text('10/день', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+                child: Text('10 подборок', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
               ),
             ],
           ),
