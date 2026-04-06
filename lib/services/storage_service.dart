@@ -15,11 +15,35 @@ class StorageService {
     return raw.map((s) => PairingResponse.fromJson(jsonDecode(s))).toList();
   }
 
-  static Future<void> saveToFavorites(PairingResponse response) async {
+  static Future<bool> isInFavorites(PairingResponse response) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_favoritesKey) ?? [];
+    return raw.any((s) {
+      try {
+        final data = jsonDecode(s);
+        return data['dish'] == response.dish && data['budget'] == response.budget;
+      } catch (_) {
+        return false;
+      }
+    });
+  }
+
+  /// Возвращает true если сохранено, false если дубликат
+  static Future<bool> saveToFavorites(PairingResponse response) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_favoritesKey) ?? [];
+    final isDuplicate = raw.any((s) {
+      try {
+        final data = jsonDecode(s);
+        return data['dish'] == response.dish && data['budget'] == response.budget;
+      } catch (_) {
+        return false;
+      }
+    });
+    if (isDuplicate) return false;
     raw.insert(0, jsonEncode(response.toJson()));
     await prefs.setStringList(_favoritesKey, raw);
+    return true;
   }
 
   static Future<void> removeFromFavorites(int index) async {
@@ -29,6 +53,20 @@ class StorageService {
       raw.removeAt(index);
       await prefs.setStringList(_favoritesKey, raw);
     }
+  }
+
+  static Future<void> removeFromFavoritesByResponse(PairingResponse response) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getStringList(_favoritesKey) ?? [];
+    raw.removeWhere((s) {
+      try {
+        final data = jsonDecode(s);
+        return data['dish'] == response.dish && data['budget'] == response.budget;
+      } catch (_) {
+        return false;
+      }
+    });
+    await prefs.setStringList(_favoritesKey, raw);
   }
 
   // ИСТОРИЯ

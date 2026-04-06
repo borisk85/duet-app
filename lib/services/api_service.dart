@@ -3,43 +3,20 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/pairing_result.dart';
+import 'auth_service.dart';
 
 class ApiService {
   static const String _baseUrl = 'https://duet-app-production.up.railway.app';
 
-  static Future<PairingResponse> pair({
-    required String dish,
-    required String mode,
-    required String budget,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final region = prefs.getString('region') ?? 'СНГ';
-
-    final response = await http.post(
-      Uri.parse('$_baseUrl/pair'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'dish': dish,
-        'mode': mode,
-        'budget': budget,
-        'region': region,
-      }),
-    ).timeout(const Duration(seconds: 30));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      return PairingResponse.fromJson(data);
-    } else if (response.statusCode == 429) {
-      throw Exception('Достигнут дневной лимит. Обновите до Premium для безлимита.');
-    } else {
-      try {
-        final error = jsonDecode(response.body);
-        throw Exception(error['detail'] ?? 'Ошибка сервера');
-      } catch (_) {
-        throw Exception('Сервис временно недоступен. Попробуйте через минуту.');
-      }
-    }
+  static Future<Map<String, String>> _headers() async {
+    final token = await AuthService.getIdToken();
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    };
   }
+
+  // ── Подборка (стриминг) ───────────────────────────────────────────────────
 
   static Stream<String> pairStream({
     required String dish,
@@ -48,11 +25,12 @@ class ApiService {
   }) async* {
     final prefs = await SharedPreferences.getInstance();
     final region = prefs.getString('region') ?? 'СНГ';
+    final headers = await _headers();
 
     final client = http.Client();
     try {
       final request = http.Request('POST', Uri.parse('$_baseUrl/pair/stream'));
-      request.headers['Content-Type'] = 'application/json';
+      request.headers.addAll(headers);
       request.body = jsonEncode({
         'dish': dish,
         'mode': mode,
@@ -60,12 +38,13 @@ class ApiService {
         'region': region,
       });
 
-      final streamed = await client
-          .send(request)
-          .timeout(const Duration(seconds: 30));
+      final streamed = await client.send(request).timeout(const Duration(seconds: 30));
 
       if (streamed.statusCode == 429) {
-        throw Exception('Достигнут дневной лимит. Обновите до Premium для безлимита.');
+        throw Exception('Достигнут лимит подборок. Перейдите на Premium для безлимитного доступа.');
+      }
+      if (streamed.statusCode == 401) {
+        throw Exception('Ошибка авторизации. Попробуйте выйти и войти снова.');
       }
       if (streamed.statusCode != 200) {
         throw Exception('Сервис временно недоступен. Попробуйте через минуту.');
@@ -76,6 +55,78 @@ class ApiService {
       }
     } finally {
       client.close();
+    }
+  }
+
+  // ── История ───────────────────────────────────────────────────────────────
+
+  static Future<List<PairingResponse>> getHistory() async {
+    final headers = await _headers();
+    final response = await http
+        .get(Uri.parse('$_baseUrl/history'), headers: headers)
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) return [];
+    final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+    return data.map((r) => PairingResponse.fromJson(r)).toList();
+  }
+
+  // ── Избранное ─────────────────────────────────────────────────────────────
+
+  static Future<List<PairingResponse>> getFavorites() async {
+    final headers = await _headers();
+    final response = await http
+        .get(Uri.parse('$_baseUrl/favorites'), headers: headers)
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) return [];
+    final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+    return data.map((r) => PairingResponse.fromJson(r)).toList();
+  }
+
+  static Future<bool> saveFavorite(PairingResponse response) async {
+    final headers = await _headers();
+    final res = await http
+        .post(
+          Uri.parse('$_baseUrl/favorites'),
+          headers: headers,
+          body: jsonEncode({
+            'dish': response.dish,
+            'mode': response.mode,
+            'budget': response.budget,
+            'region': response.region,
+            'results': response.results.map((r) => r.toJson()).toList(),
+          }),
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (res.statusCode == 429) {
+      throw Exception('Лимит 10 избранных для Free. Перейдите на Premium.');
+    }
+    if (res.statusCode != 200) return false;
+    final data = jsonDecode(res.body);
+    return data['saved'] == true;
+  }
+
+  static Future<void> removeFavorite(int id) async {
+    final headers = await _headers();
+    await http
+        .delete(Uri.parse('$_baseUrl/favorites/$id'), headers: headers)
+        .timeout(const Duration(seconds: 15));
+  }
+
+  // ── Профиль / использование ───────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>?> getMe() async {
+    final headers = await _headers();
+    try {
+      final response = await http
+          .get(Uri.parse('$_baseUrl/me'), headers: headers)
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) return null;
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } catch (_) {
+      return null;
     }
   }
 }

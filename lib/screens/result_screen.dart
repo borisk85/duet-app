@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/pairing_result.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
+import '../services/api_service.dart';
 
 class ResultScreen extends StatefulWidget {
   // Для истории / избранного — уже готовый ответ
@@ -41,6 +42,7 @@ class _ResultScreenState extends State<ResultScreen>
   PairingResponse? _response;
   bool _isLoading = true;
   bool _isSaved = false;
+  bool _isSavedChecked = false;
   String? _error;
 
   late final AnimationController _pulseController;
@@ -56,6 +58,7 @@ class _ResultScreenState extends State<ResultScreen>
     if (widget.response != null) {
       _response = widget.response;
       _isLoading = false;
+      _checkIfSaved();
     } else {
       _startStream();
     }
@@ -65,6 +68,13 @@ class _ResultScreenState extends State<ResultScreen>
   void dispose() {
     _pulseController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkIfSaved() async {
+    if (_response == null) return;
+    final favorites = await ApiService.getFavorites();
+    final saved = favorites.any((f) => f.dish == _response!.dish && f.budget == _response!.budget);
+    if (mounted) setState(() { _isSaved = saved; _isSavedChecked = true; });
   }
 
   Future<void> _startStream() async {
@@ -151,7 +161,8 @@ class _ResultScreenState extends State<ResultScreen>
             const SizedBox(height: 24),
             _buildSaveButton(context),
           ],
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
@@ -439,7 +450,14 @@ class _ResultScreenState extends State<ResultScreen>
                   onTap: () => _openBuyLink(result.brand),
                   child: Row(
                     children: [
-                      Text(result.brand, style: const TextStyle(color: _goldText, fontSize: 13)),
+                      Flexible(
+                        child: Text(
+                          result.brand,
+                          style: const TextStyle(color: _goldText, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       const SizedBox(width: 4),
                       const Icon(Icons.open_in_new_rounded, size: 12, color: _goldText),
                     ],
@@ -518,10 +536,22 @@ class _ResultScreenState extends State<ResultScreen>
       width: double.infinity,
       height: 54,
       child: ElevatedButton.icon(
-        onPressed: _isSaved ? null : () {
+        onPressed: _isSaved ? () {} : () async {
           HapticFeedback.mediumImpact();
-          if (_response != null) StorageService.saveToFavorites(_response!);
-          setState(() => _isSaved = true);
+          if (_response == null) return;
+          try {
+            await ApiService.saveFavorite(_response!);
+            if (mounted) setState(() => _isSaved = true);
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(e.toString().replaceAll('Exception: ', '')),
+                backgroundColor: Colors.red.shade800,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ));
+            }
+          }
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: _gold,
@@ -529,9 +559,9 @@ class _ResultScreenState extends State<ResultScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
         ),
-        icon: Icon(_isSaved ? Icons.check_rounded : Icons.star_rounded, size: 20),
+        icon: Icon(_isSaved ? Icons.star_rounded : Icons.star_outline_rounded, size: 20),
         label: Text(
-          _isSaved ? 'Сохранено' : 'Сохранить в избранное',
+          _isSaved ? 'Сохранено в избранное' : 'Сохранить в избранное',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),

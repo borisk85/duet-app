@@ -52,8 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildInputField(),
                     const SizedBox(height: 12),
                     _buildHints(),
-                    const SizedBox(height: 24),
-                    _buildBudgetSelector(),
+                    if (_isFoodToAlcohol) ...[
+                      const SizedBox(height: 24),
+                      _buildBudgetSelector(),
+                    ],
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -309,7 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
           pageBuilder: (_, __, ___) => ResultScreen(
             dish: dish,
             mode: _isFoodToAlcohol ? 'food_to_alcohol' : 'alcohol_to_food',
-            budget: budgetKeys[_budgetIndex],
+            budget: _isFoodToAlcohol ? budgetKeys[_budgetIndex] : 'medium',
           ),
           transitionsBuilder: (_, animation, __, child) =>
               FadeTransition(opacity: animation, child: child),

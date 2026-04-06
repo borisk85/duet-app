@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/pairing_result.dart';
-import '../services/storage_service.dart';
+import '../services/api_service.dart';
 import 'result_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _load() async {
-    final data = await StorageService.getHistory();
+    final data = await ApiService.getHistory();
     setState(() {
       _history = data;
       _loading = false;
@@ -54,10 +54,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         actions: _history.isNotEmpty
             ? [
                 TextButton(
-                  onPressed: () async {
-                    await StorageService.clearHistory();
-                    setState(() => _history = []);
-                  },
+                  onPressed: () => setState(() => _history = []),
                   child: Text('Очистить', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13)),
                 ),
               ]

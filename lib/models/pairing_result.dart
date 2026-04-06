@@ -57,6 +57,7 @@ class PairingResult {
 }
 
 class PairingResponse {
+  final int? id; // id из БД (для удаления из избранного)
   final String dish;
   final String mode;
   final String budget;
@@ -65,6 +66,7 @@ class PairingResponse {
   final DateTime createdAt;
 
   PairingResponse({
+    this.id,
     required this.dish,
     required this.mode,
     required this.budget,
@@ -75,6 +77,7 @@ class PairingResponse {
 
   factory PairingResponse.fromJson(Map<String, dynamic> json) {
     return PairingResponse(
+      id: json['id'] as int?,
       dish: json['dish'] ?? '',
       mode: json['mode'] ?? 'food_to_alcohol',
       budget: json['budget'] ?? 'medium',
@@ -82,7 +85,7 @@ class PairingResponse {
       results: (json['results'] as List<dynamic>? ?? [])
           .map((r) => PairingResult.fromJson(r))
           .toList(),
-      createdAt: DateTime.now(),
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
     );
   }
 

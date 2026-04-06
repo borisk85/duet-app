@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 
@@ -9,7 +10,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0D0D0D);
   static const _card = Color(0xFF1A1A1A);
@@ -17,6 +19,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _region = 'СНГ';
   Set<String> _preferredTypes = {};
   bool _loading = true;
+
+  late final AnimationController _shakeController;
+  late final Animation<double> _shakeAnimation;
 
   final _regions = ['СНГ', 'Россия', 'Казахстан', 'Украина', 'Беларусь'];
   final _alcoholTypes = [
@@ -36,6 +41,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _load();
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _shakeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0, end: -6), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -6, end: 6), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 6, end: -6), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -6, end: 6), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 6, end: 0), weight: 1),
+    ]).animate(_shakeController);
+  }
+
+  @override
+  void dispose() {
+    _shakeController.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -152,18 +174,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (count > 0)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(
-              '$count/3',
-              style: TextStyle(
-                color: count == 3 ? _gold : Colors.white.withOpacity(0.35),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              key: ValueKey(count),
+              child: Text(
+                count == 0
+                    ? 'Выберите до 3 категорий'
+                    : count == 3
+                        ? '3 из 3 выбрано ✓'
+                        : '$count из 3 выбрано',
+                style: TextStyle(
+                  color: count == 0 ? Colors.white70 : _gold,
+                  fontSize: 13,
+                  fontWeight: count > 0 ? FontWeight.w500 : FontWeight.w400,
+                ),
               ),
             ),
           ),
+        ),
         Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -172,7 +204,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final selected = _preferredTypes.contains(key);
         return GestureDetector(
           onTap: () {
-            if (!selected && _preferredTypes.length >= 3) return;
+            if (!selected && _preferredTypes.length >= 3) {
+              HapticFeedback.heavyImpact();
+              _shakeController.forward(from: 0);
+              return;
+            }
             setState(() {
               if (selected) {
                 _preferredTypes.remove(key);
@@ -182,7 +218,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             });
             _save();
           },
-          child: AnimatedContainer(
+          child: AnimatedBuilder(
+            animation: _shakeAnimation,
+            builder: (_, child) => Transform.translate(
+              offset: Offset(selected ? _shakeAnimation.value : 0, 0),
+              child: child,
+            ),
+            child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
@@ -209,6 +251,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+            ),
         );
       }).toList(),
         ),

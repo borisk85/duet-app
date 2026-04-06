@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/pairing_result.dart';
-import '../services/storage_service.dart';
+import '../services/api_service.dart';
 import 'result_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -26,16 +26,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Future<void> _load() async {
-    final data = await StorageService.getFavorites();
+    final data = await ApiService.getFavorites();
     setState(() {
       _favorites = data;
       _loading = false;
     });
   }
 
-  Future<void> _remove(int index) async {
-    await StorageService.removeFromFavorites(index);
+  void _remove(int index) {
+    final item = _favorites[index];
     setState(() => _favorites.removeAt(index));
+    if (item.id != null) ApiService.removeFavorite(item.id!);
   }
 
   @override
@@ -113,17 +114,30 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget _buildCard(PairingResponse item, int index) {
     final firstResult = item.results.isNotEmpty ? item.results.first : null;
     return Dismissible(
-      key: Key('fav_$index'),
+      key: Key('fav_${item.dish}_${item.budget}_${item.createdAt.millisecondsSinceEpoch}'),
       direction: DismissDirection.endToStart,
       background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.red.shade900,
+          color: _card,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: const Icon(Icons.delete_rounded, color: Colors.white),
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            width: 80,
+            decoration: const BoxDecoration(
+              color: Color(0xFF8B0000),
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(14),
+                bottomRight: Radius.circular(14),
+              ),
+            ),
+            child: const Center(
+              child: Icon(Icons.delete_rounded, color: Colors.white, size: 20),
+            ),
+          ),
+        ),
       ),
       onDismissed: (_) => _remove(index),
       child: GestureDetector(
