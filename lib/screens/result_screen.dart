@@ -435,9 +435,13 @@ class _ResultScreenState extends State<ResultScreen>
                   children: [
                     Text(result.resolvedEmoji, style: const TextStyle(fontSize: 14)),
                     const SizedBox(width: 4),
-                    Text(
-                      result.alcoholType,
-                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                    Flexible(
+                      child: Text(
+                        result.alcoholType,
+                        style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -466,15 +470,21 @@ class _ResultScreenState extends State<ResultScreen>
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              result.priceRange,
-              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+          const SizedBox(width: 8),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 110),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                result.priceRange,
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
         ],

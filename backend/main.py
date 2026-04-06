@@ -124,6 +124,69 @@ BUDGET_MAP = {
     "premium": "ПРЕМИУМ сегмент: вино от $50 (Bordeaux, Barolo, Napa Cabernet, Burgundy), виски от $80 (Single Malt 12+ лет, Scotch, Japanese), коньяк от $100 (XO, VSOP premium), шампанское от $70 (Vintage, Prestige Cuvée). Рекомендуй ТОЛЬКО элитные и культовые бренды — никаких массовых вин дешевле $50. Price_range ДОЛЖЕН быть соответствующим ($50-120 для вина, $80-200 для виски).",
 }
 
+GLOBAL_BRANDS_REFERENCE = """ГЛОБАЛЬНАЯ БАЗА ХОДОВЫХ БРЕНДОВ ДОСТУПНЫХ ВЕЗДЕ В СНГ (используй активно, не зацикливайся на самых очевидных):
+
+🍺 ПИВО:
+— Лагер мировой: Corona Extra, Heineken, Carlsberg, Stella Artois, Becks, Tuborg, Holsten, Warsteiner, Bitburger, Krombacher, Pilsner Urquell, Budweiser Budvar, Tsingtao, Asahi
+— Немецкий пшеничный/крафт: Paulaner, Erdinger, Franziskaner, Schneider Weisse, Maisel's Weisse, Weihenstephaner
+— Бельгийский: Hoegaarden, Leffe (Blonde/Brune/Ruby), Duvel, Chimay (Red/Blue/White), Westmalle, Kwak, La Chouffe
+— Стаут/портер: Guinness Draught, Guinness Extra Stout, Murphy's, Beamish, Köstritzer Schwarzbier
+— IPA / крафт международный: Brewdog (Punk IPA, Hazy Jane, Elvis Juice), Lagunitas, Sierra Nevada, Mikkeller
+— Сидр и фруктовое: Strongbow, Somersby, Magners, Kopparberg, Lindemans (Kriek, Framboise)
+
+🥃 ВИСКИ:
+— Шотландский blended: Johnnie Walker (Red/Black/Double Black/Gold/Blue), Chivas Regal (12/18), Ballantine's (Finest/12/17), Famous Grouse, J&B, Dewar's, William Lawson's, Teacher's, Bell's, White Horse, Cutty Sark
+— Single Malt Scotch: Glenfiddich (12/15/18), Glenlivet (12/15/18), Macallan (12/15/18), Glenmorangie (Original/Lasanta/Quinta Ruban), Highland Park, Talisker, Laphroaig, Ardbeg, Bowmore, Cardhu, Aberlour, Dalwhinnie
+— Ирландский: Jameson, Tullamore Dew, Bushmills, Powers, Redbreast, Connemara
+— Американский bourbon/rye: Jack Daniel's, Jim Beam, Maker's Mark, Wild Turkey, Buffalo Trace, Woodford Reserve, Bulleit, Four Roses
+— Японский: Suntory Toki/Hibiki/Yamazaki/Hakushu, Nikka From The Barrel/Coffey Grain
+
+🥃 КОНЬЯК / БРЕНДИ:
+— Французский коньяк: Hennessy (VS/VSOP/XO), Martell (VS/VSOP/XO/Cordon Bleu), Remy Martin (VSOP/1738/XO), Courvoisier (VS/VSOP/XO), Camus, Bisquit
+— Армянский: Ararat (3/5/7/10/Akhtamar/Vaspurakan/Nairi), Noy
+— Молдавский: Kvint, Bardar
+— Испанский бренди: Cardenal Mendoza, Torres, Carlos I
+— Греческий: Metaxa (5/7/12)
+
+🍹 РОМ:
+— Светлый/золотой массовый: Bacardi (Carta Blanca/Oro/Anejo), Havana Club (3/7/Especial), Captain Morgan (Spiced/White/Dark), Brugal, Mount Gay (Eclipse/XO)
+— Премиум: Diplomatico (Reserva Exclusiva/Mantuano), Zacapa (23/XO), Plantation (3 Stars/Original Dark/XO), Appleton Estate (Signature/8/12), El Dorado (12/15)
+
+🌵 ТЕКИЛА И МЕСКАЛЬ:
+— Массовая: Jose Cuervo (Especial/Tradicional), Sauza (Silver/Gold/Hornitos), Olmeca (Blanco/Reposado/Anejo), Sierra Tequila
+— Премиум 100% agave: Patron (Silver/Reposado/Anejo), Don Julio (Blanco/Reposado/Anejo/1942), Herradura, Espolon, Cazadores, Tres Generaciones, Casamigos
+— Мескаль: Del Maguey, Montelobos, Ilegal
+
+🌿 ДЖИН:
+— Лондонский dry: Beefeater, Gordon's, Tanqueray (London Dry/Ten/Rangpur), Bombay Sapphire, Plymouth, Greenall's
+— Современный premium: Hendrick's, Monkey 47, The Botanist, Roku, Sipsmith, Bulldog, Brockmans, Citadelle
+
+🫗 ВОДКА:
+— Премиум международная: Absolut (Original/Citron/Vanilla/Elyx), Smirnoff (Red/Black), Finlandia, Grey Goose, Belvedere, Ketel One, Tito's, Stolichnaya
+— Восточно-европейская: Beluga (Noble/Gold Line/Transatlantic), Russian Standard (Original/Gold/Platinum), Khortytsa, Nemiroff, Soplica, Wyborowa, Zubrowka
+
+🥂 ИГРИСТОЕ / ШАМПАНСКОЕ:
+— Шампань: Moet & Chandon (Brut Imperial/Rose/Nectar), Veuve Clicquot (Yellow Label/Rose/Vintage), Dom Perignon, Lanson (Black Label/Rose), Mumm (Cordon Rouge), Taittinger, Bollinger, Pol Roger, Laurent-Perrier, Ruinart
+— Просекко: Mionetto, Bisol, Bottega Gold, Cinzano Pro-Spritz, Carpene Malvolti
+— Кава: Freixenet (Cordon Negro/Carta Nevada), Codorniu
+— Ламбруско: Riccadonna, Cinzano, Chiarli, Cavicchioli
+
+🍷 ВИНО (мировые регионы массово доступные):
+— Италия: Chianti Classico, Barolo, Brunello di Montalcino, Amarone, Valpolicella, Montepulciano, Prosecco, Pinot Grigio, Soave, Frascati. Бренды: Antinori, Frescobaldi, Banfi, Ruffino, Gaja, Masi
+— Франция: Bordeaux (Médoc/Saint-Émilion/Pomerol), Burgundy (Côte de Nuits/Beaune), Côtes du Rhône, Châteauneuf-du-Pape, Chablis, Sancerre, Beaujolais, Provence rosé. Бренды: Mouton Cadet, B&G, Louis Jadot, Joseph Drouhin, Georges Duboeuf
+— Испания: Rioja (Marqués de Cáceres, Faustino, Campo Viejo, Marqués de Riscal), Ribera del Duero (Vega Sicilia, Pesquera, Protos), Priorat, Albariño, Cava
+— Германия: Riesling (Dr Loosen, Selbach Oster, Mosel), Spätburgunder
+— Португалия: Vinho Verde, Douro, Port wine (Taylor's, Graham's, Sandeman, Dow's)
+— Чили/Аргентина: Concha y Toro, Santa Rita, Catena, Trapiche, Norton, Luigi Bosca (Malbec, Carmenere, Cabernet Sauvignon)
+— Австралия/НЗ: Penfolds, Wolf Blass, Jacob's Creek, Yellow Tail, Cloudy Bay (Sauvignon Blanc), Oyster Bay
+— ЮАР: KWV, Nederburg, Spier
+— Грузия: Saperavi, Mukuzani, Kindzmarauli, Khvanchkara, Tsinandali, Rkatsiteli (Tbilvino, Teliani Valley, Kindzmarauli Marani, Telavi Wine Cellar, Askaneli)
+— Армения: Areni, Voskehat (Armas, Karas, Trinity, ArmAs)
+— Молдавия: Cricova, Milestii Mici, Purcari
+— Крым/Кубань (для РФ): Massandra, Inkerman, Sevastopol Winery, Fanagoria, Kuban-Vino, Lefkadia, Abrau-Durso
+
+ПРАВИЛО: при подборке используй РАЗНЫЕ бренды и стили. Не повторяй один и тот же бренд в трёх карточках одной подборки. Между запросами от пользователя — варьируй, не давай Krombacher на каждый второй запрос. У тебя сотни качественных альтернатив, используй ширину базы."""
+
 REGION_AVAILABILITY = {
     "Казахстан": "Бренды доступные в Алматы и Астане. Помимо локальных (Шымкентское, Карагандинское, Тянь-Шань) широко представлены: международные пива (Corona Extra, Heineken, Carlsberg, Krombacher, Paulaner, Bitburger, Erdinger, Hoegaarden, Leffe, Pilsner Urquell, Budweiser Budvar), крафтовые казахстанские пивоварни (Tsarka, Brewster, Mezhdu Strok), европейские вина, грузинские вина (Saperavi, Mukuzani, Kindzmarauli), армянские коньяки (Ararat, Noy), импортные виски и текила. НЕ зацикливайся на самых очевидных местных брендах.",
     "Россия":    "Бренды доступные в крупных городах РФ с учётом ограничений импорта 2024-2026. Помимо очевидных (Балтика, Жигулёвское) широко представлены: российские крафтовые пивоварни (AF Brew, Salden's, Konix, Stamm, Brewlok, Zagovor), доступные импортные пива (Krombacher, Paulaner, Hoegaarden, Pilsner Urquell, Bitburger через параллельный импорт), грузинские вина (Saperavi, Mukuzani), крымские и кубанские вина (Massandra, Inkerman, Fanagoria, Lefkadia), армянские и российские коньяки (Ararat, Kvint, Kizlyar), азиатские крепкие напитки. НЕ предлагай Балтику и Жигулёвское по умолчанию — давай разнообразие.",
@@ -208,21 +271,27 @@ def _build_prompt(req: PairRequest) -> str:
     if req.mode == "food_to_alcohol":
         return f"""{EXPERT_ROLE}
 
+{GLOBAL_BRANDS_REFERENCE}
+
 Пользователь из региона {req.region}.
 Блюдо: {req.dish}
 Бюджет: {budget_desc}
 Доступность: {availability}
 {detail_desc}
 Подбери ТОП-3 напитка разных типов. Первым ставь напиток наиболее традиционный для данной кухни.
+ВАЖНО про price_range: ТОЛЬКО короткий диапазон цены, максимум 12 символов. Без скобок, без описаний, без слов "или", "за бутылку", "в баре", "домашнего". Правильно: "$15-20", "~$50", "$80-120". Неправильно: "$15-20 (бутылка)", "$12-18 или $6 домашнего".
 Верни ТОЛЬКО валидный JSON без markdown:
 {{"results":[{{"alcohol_type":"тип","alcohol_type_emoji":"🍷","name":"название","brand":"конкретная марка доступная в {req.region}","reason":"объяснение в соответствии с режимом детализации","price_range":"$X-Y","serving_tip":"совет по подаче в соответствии с режимом детализации"}}]}}"""
     else:
         return f"""{EXPERT_ROLE}
 
+{GLOBAL_BRANDS_REFERENCE}
+
 Пользователь из региона {req.region}.
 Напиток: {req.dish}
 {detail_desc}
 Подбери ТОП-3 блюда/закуски к этому напитку.
+ВАЖНО про price_range: ТОЛЬКО короткая цифровая оценка, максимум 12 символов. Без скобок и описаний. Правильно: "~$10", "$5-15". Неправильно: "~$10 (порция)", "$5-15 в ресторане".
 Верни ТОЛЬКО валидный JSON без markdown:
 {{"results":[{{"alcohol_type":"категория блюда","alcohol_type_emoji":"🍽️","name":"название блюда","brand":"вариант/где попробовать","reason":"объяснение в соответствии с режимом детализации","price_range":"~$X","serving_tip":"совет по подаче в соответствии с режимом детализации"}}]}}"""
 
