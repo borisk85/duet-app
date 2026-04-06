@@ -380,6 +380,8 @@ class _ResultScreenState extends State<ResultScreen>
                 Text(
                   result.reason,
                   style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.5),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
                 _buildBottomRow(result),
@@ -486,16 +488,27 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Future<void> _openBuyLink(String brand) async {
-    final cityMap = {
-      'Казахстан': 'Алматы',
-      'Россия': 'Москва',
-      'Украина': 'Киев',
-      'Беларусь': 'Минск',
-    };
     final region = _response?.region ?? '';
-    final city = cityMap[region] ?? '';
-    final query = Uri.encodeComponent('$brand купить${city.isNotEmpty ? ' $city' : ''}');
-    final uri = Uri.parse('https://www.google.com/search?q=$query');
+    final encoded = Uri.encodeComponent(brand);
+    Uri uri;
+
+    switch (region) {
+      case 'Казахстан':
+        uri = Uri.parse('https://kaspi.kz/shop/search/?q=$encoded');
+        break;
+      case 'Россия':
+        uri = Uri.parse('https://winestyle.ru/search/?search=$encoded');
+        break;
+      case 'Украина':
+        uri = Uri.parse('https://www.google.com/search?q=$encoded+купить+Киев');
+        break;
+      case 'Беларусь':
+        uri = Uri.parse('https://www.google.com/search?q=$encoded+купить+Минск');
+        break;
+      default:
+        uri = Uri.parse('https://www.google.com/search?q=$encoded+купить');
+    }
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }

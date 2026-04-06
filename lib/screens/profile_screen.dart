@@ -28,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     {'key': 'rum', 'label': 'Ром', 'emoji': '🍹'},
     {'key': 'tequila', 'label': 'Текила', 'emoji': '🌵'},
     {'key': 'cocktails', 'label': 'Коктейли', 'emoji': '🍸'},
+    {'key': 'sparkling', 'label': 'Игристое', 'emoji': '🥂'},
   ];
 
   @override
