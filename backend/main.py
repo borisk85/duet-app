@@ -288,7 +288,8 @@ def get_history(request: Request):
             )
             rows = cur.fetchall()
             cols = [d[0] for d in cur.description]
-        return [dict(zip(cols, r)) | {"results": json.loads(r[4]), "created_at": r[5].isoformat()} for r in rows]
+        # JSONB поле psycopg2 уже декодирует в Python list/dict — json.loads не нужен
+        return [dict(zip(cols, r)) | {"results": r[4], "created_at": r[5].isoformat()} for r in rows]
     finally:
         pool.putconn(conn)
 
@@ -306,7 +307,7 @@ def get_favorites(request: Request):
             )
             rows = cur.fetchall()
             cols = [d[0] for d in cur.description]
-        return [dict(zip(cols, r)) | {"results": json.loads(r[5]), "created_at": r[6].isoformat()} for r in rows]
+        return [dict(zip(cols, r)) | {"results": r[5], "created_at": r[6].isoformat()} for r in rows]
     finally:
         pool.putconn(conn)
 
