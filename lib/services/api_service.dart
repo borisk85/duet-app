@@ -25,6 +25,7 @@ class ApiService {
   }) async* {
     final prefs = await SharedPreferences.getInstance();
     final region = prefs.getString('region') ?? 'СНГ';
+    final detailLevel = prefs.getString('detail_level') ?? 'standard';
     final headers = await _headers();
 
     final client = http.Client();
@@ -36,6 +37,7 @@ class ApiService {
         'mode': mode,
         'budget': budget,
         'region': region,
+        'detail_level': detailLevel,
       });
 
       final streamed = await client.send(request).timeout(const Duration(seconds: 30));

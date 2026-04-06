@@ -19,6 +19,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   String _region = 'СНГ';
   Set<String> _preferredTypes = {};
+  String _detailLevel = 'standard';
   bool _loading = true;
   bool _isPremium = false;
   int _pairingCount = 0;
@@ -69,6 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     setState(() {
       _region = prefs.getString('region') ?? 'СНГ';
       _preferredTypes = (prefs.getStringList('preferred_types') ?? []).toSet();
+      _detailLevel = prefs.getString('detail_level') ?? 'standard';
       _loading = false;
     });
     // Загружаем данные профиля с сервера (не блокируем UI)
@@ -86,6 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('region', _region);
     await prefs.setStringList('preferred_types', _preferredTypes.toList());
+    await prefs.setString('detail_level', _detailLevel);
   }
 
   @override
@@ -106,6 +109,8 @@ class _ProfileScreenState extends State<ProfileScreen>
               padding: const EdgeInsets.all(20),
               children: [
                 _buildSection('Регион', _buildRegionSelector()),
+                const SizedBox(height: 24),
+                _buildSection('Детализация подборок', _buildDetailLevelSelector()),
                 const SizedBox(height: 24),
                 _buildSection(
                   'Предпочтения',
@@ -170,6 +175,91 @@ class _ProfileScreenState extends State<ProfileScreen>
                 children: [
                   Expanded(
                     child: Text(r, style: const TextStyle(color: Colors.white, fontSize: 15)),
+                  ),
+                  if (selected)
+                    const Icon(Icons.check_rounded, color: _gold, size: 20),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildDetailLevelSelector() {
+    final levels = [
+      {
+        'key': 'simple',
+        'label': 'Просто',
+        'desc': 'Краткое объяснение для новичка',
+        'icon': Icons.lightbulb_outline_rounded,
+      },
+      {
+        'key': 'standard',
+        'label': 'Стандарт',
+        'desc': 'Объяснение почему сочетается + совет по подаче',
+        'icon': Icons.tune_rounded,
+      },
+      {
+        'key': 'expert',
+        'label': 'Эксперт',
+        'desc': 'Сорт, регион, выдержка, температура, бокал',
+        'icon': Icons.workspace_premium_rounded,
+      },
+    ];
+    return Container(
+      decoration: BoxDecoration(color: _card, borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        children: levels.asMap().entries.map((entry) {
+          final isLast = entry.key == levels.length - 1;
+          final level = entry.value;
+          final key = level['key'] as String;
+          final selected = _detailLevel == key;
+          return GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              setState(() => _detailLevel = key);
+              _save();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                border: isLast
+                    ? null
+                    : Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05))),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    level['icon'] as IconData,
+                    color: selected ? _gold : Colors.white.withOpacity(0.4),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          level['label'] as String,
+                          style: TextStyle(
+                            color: selected ? _gold : Colors.white,
+                            fontSize: 15,
+                            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          level['desc'] as String,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.4),
+                            fontSize: 12,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   if (selected)
                     const Icon(Icons.check_rounded, color: _gold, size: 20),

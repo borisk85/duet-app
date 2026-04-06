@@ -132,11 +132,18 @@ REGION_AVAILABILITY = {
     "СНГ":       "Рекомендуй универсальные бренды присутствующие во всех странах СНГ.",
 }
 
+DETAIL_LEVEL_MAP = {
+    "simple":   "РЕЖИМ ПРОСТО: краткое объяснение для новичка. Reason — 1 короткое предложение простыми словами без терминов. Serving_tip — 1 короткая фраза (например 'охладить до 12°C'). Никакого специализированного жаргона.",
+    "standard": "РЕЖИМ СТАНДАРТ: сбалансированное объяснение. Reason — 2 предложения почему сочетается. Serving_tip — практичный совет по подаче (температура, посуда, с чем подавать).",
+    "expert":   "РЕЖИМ ЭКСПЕРТ: профессиональное описание для знатока. Reason — 2-3 предложения с указанием сорта винограда/региона/выдержки/вкусового профиля и обоснованием парности через танины/кислотность/умами/жирность. Serving_tip — точная температура подачи в °C, тип бокала/посуды, рекомендации по декантации/времени дыхания если применимо.",
+}
+
 class PairRequest(BaseModel):
     dish: str
     mode: str = "food_to_alcohol"
     budget: str = "medium"
     region: str = "СНГ"
+    detail_level: str = "standard"
 
     @field_validator("dish")
     @classmethod
@@ -162,23 +169,33 @@ class PairRequest(BaseModel):
             raise ValueError("Неверный бюджет")
         return v
 
+    @field_validator("detail_level")
+    @classmethod
+    def validate_detail_level(cls, v: str) -> str:
+        if v not in ("simple", "standard", "expert"):
+            raise ValueError("Неверный режим детализации")
+        return v
+
 def _build_prompt(req: PairRequest) -> str:
     budget_desc = BUDGET_MAP[req.budget]
     availability = REGION_AVAILABILITY.get(req.region, REGION_AVAILABILITY["СНГ"])
+    detail_desc = DETAIL_LEVEL_MAP[req.detail_level]
     if req.mode == "food_to_alcohol":
         return f"""Ты эксперт-сомелье. Пользователь из региона {req.region}.
 Блюдо: {req.dish}
 Бюджет: {budget_desc}
 Доступность: {availability}
+{detail_desc}
 Подбери ТОП-3 напитка разных типов. Первым ставь напиток наиболее традиционный для данной кухни.
 Верни ТОЛЬКО валидный JSON без markdown:
-{{"results":[{{"alcohol_type":"тип","alcohol_type_emoji":"🍷","name":"название","brand":"конкретная марка доступная в {req.region}","reason":"2 предложения почему подходит","price_range":"$X-Y","serving_tip":"как подавать"}}]}}"""
+{{"results":[{{"alcohol_type":"тип","alcohol_type_emoji":"🍷","name":"название","brand":"конкретная марка доступная в {req.region}","reason":"объяснение в соответствии с режимом детализации","price_range":"$X-Y","serving_tip":"совет по подаче в соответствии с режимом детализации"}}]}}"""
     else:
         return f"""Ты эксперт-сомелье. Пользователь из региона {req.region}.
 Напиток: {req.dish}
+{detail_desc}
 Подбери ТОП-3 блюда/закуски к этому напитку.
 Верни ТОЛЬКО валидный JSON без markdown:
-{{"results":[{{"alcohol_type":"категория блюда","alcohol_type_emoji":"🍽️","name":"название блюда","brand":"вариант/где попробовать","reason":"2 предложения почему подходит","price_range":"~$X","serving_tip":"как подавать"}}]}}"""
+{{"results":[{{"alcohol_type":"категория блюда","alcohol_type_emoji":"🍽️","name":"название блюда","brand":"вариант/где попробовать","reason":"объяснение в соответствии с режимом детализации","price_range":"~$X","serving_tip":"совет по подаче в соответствии с режимом детализации"}}]}}"""
 
 # ── Эндпоинты ────────────────────────────────────────────────────────────────
 
@@ -204,7 +221,7 @@ async def pair_stream(request: Request, req: PairRequest):
         pool.putconn(conn)
 
     cache_key = hashlib.md5(
-        f"{req.dish.lower()}|{req.mode}|{req.budget}|{req.region}".encode()
+        f"{req.dish.lower()}|{req.mode}|{req.budget}|{req.region}|{req.detail_level}".encode()
     ).hexdigest()
 
     cached = _cache_get(cache_key)
