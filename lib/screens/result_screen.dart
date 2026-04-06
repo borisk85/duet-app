@@ -216,20 +216,25 @@ class _ResultScreenState extends State<ResultScreen>
                   dish,
                   style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: _gold.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
+                // Бейдж бюджета показываем только в режиме "блюдо → напиток".
+                // В режиме "напиток → еда" бюджет не выбирается на главном экране,
+                // поэтому и здесь его не показываем (был орфан "💰💰 Средний").
+                if (mode == 'food_to_alcohol') ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _gold.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      budget == 'budget' ? '💰 Бюджетно'
+                          : budget == 'premium' ? '💰💰💰 Премиум'
+                          : '💰💰 Средний',
+                      style: const TextStyle(color: _gold, fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
                   ),
-                  child: Text(
-                    budget == 'budget' ? '💰 Бюджетно'
-                        : budget == 'premium' ? '💰💰💰 Премиум'
-                        : '💰💰 Средний',
-                    style: const TextStyle(color: _gold, fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
-                ),
+                ],
               ],
             ),
           ),
@@ -393,6 +398,12 @@ class _ResultScreenState extends State<ResultScreen>
                   result.reason,
                   style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.5),
                 ),
+                // Блок "Почему это работает" — только в Эксперт-режиме.
+                // whyItWorks приходит с бэкенда только когда detail_level == expert.
+                if (result.whyItWorks != null) ...[
+                  const SizedBox(height: 12),
+                  _buildWhyItWorksBlock(result.whyItWorks!),
+                ],
                 const SizedBox(height: 12),
                 _buildBottomRow(result),
               ],
@@ -485,6 +496,49 @@ class _ResultScreenState extends State<ResultScreen>
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWhyItWorksBlock(String text) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: _gold.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border(
+          left: BorderSide(color: _gold, width: 3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.science_rounded, color: _gold, size: 14),
+              const SizedBox(width: 6),
+              Text(
+                'ПОЧЕМУ ЭТО РАБОТАЕТ',
+                style: TextStyle(
+                  color: _gold,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.75),
+              fontSize: 13,
+              height: 1.5,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],

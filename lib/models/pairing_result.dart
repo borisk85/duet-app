@@ -6,6 +6,9 @@ class PairingResult {
   final String reason;
   final String priceRange;
   final String servingTip;
+  // Существует только в Эксперт-режиме. Отдельный блок гастрономической логики.
+  // В Просто и Стандарт = null, и UI не рендерит блок.
+  final String? whyItWorks;
 
   const PairingResult({
     required this.alcoholType,
@@ -15,9 +18,11 @@ class PairingResult {
     required this.reason,
     required this.priceRange,
     required this.servingTip,
+    this.whyItWorks,
   });
 
   factory PairingResult.fromJson(Map<String, dynamic> json) {
+    final whyRaw = json['why_it_works'];
     return PairingResult(
       alcoholType: json['alcohol_type'] ?? '',
       alcoholTypeEmoji: json['alcohol_type_emoji'] ?? '🍷',
@@ -26,6 +31,7 @@ class PairingResult {
       reason: json['reason'] ?? '',
       priceRange: json['price_range'] ?? '',
       servingTip: json['serving_tip'] ?? '',
+      whyItWorks: (whyRaw is String && whyRaw.trim().isNotEmpty) ? whyRaw : null,
     );
   }
 
@@ -53,6 +59,7 @@ class PairingResult {
     'reason': reason,
     'price_range': priceRange,
     'serving_tip': servingTip,
+    if (whyItWorks != null) 'why_it_works': whyItWorks,
   };
 }
 
