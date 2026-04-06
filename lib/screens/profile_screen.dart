@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,6 +20,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   String _region = 'СНГ';
   Set<String> _preferredTypes = {};
   bool _loading = true;
+  bool _isPremium = false;
+  int _pairingCount = 0;
+  int _pairingLimit = 10;
 
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnimation;
@@ -67,6 +71,15 @@ class _ProfileScreenState extends State<ProfileScreen>
       _preferredTypes = (prefs.getStringList('preferred_types') ?? []).toSet();
       _loading = false;
     });
+    // Загружаем данные профиля с сервера (не блокируем UI)
+    final me = await ApiService.getMe();
+    if (me != null && mounted) {
+      setState(() {
+        _isPremium = me['is_premium'] == true;
+        _pairingCount = (me['pairing_count'] as num?)?.toInt() ?? 0;
+        _pairingLimit = (me['pairing_limit'] as num?)?.toInt() ?? 10;
+      });
+    }
   }
 
   Future<void> _save() async {
@@ -295,6 +308,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildSubscription() {
+    final left = (_pairingLimit - _pairingCount).clamp(0, _pairingLimit);
+    final progress = _pairingLimit > 0 ? (_pairingCount / _pairingLimit).clamp(0.0, 1.0) : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -309,36 +325,64 @@ class _ProfileScreenState extends State<ProfileScreen>
             children: [
               const Text('⚡', style: TextStyle(fontSize: 20)),
               const SizedBox(width: 8),
-              const Text(
-                'Бесплатный план',
-                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+              Text(
+                _isPremium ? 'Premium' : 'Бесплатный план',
+                style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(6),
+              if (_isPremium)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _gold.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text('Безлимит', style: TextStyle(color: _gold, fontSize: 12, fontWeight: FontWeight.w600)),
+                )
+              else
+                Text(
+                  '$_pairingCount / $_pairingLimit',
+                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
                 ),
-                child: Text('10 подборок', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
-              ),
             ],
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 46,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _gold,
-                foregroundColor: _bg,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                elevation: 0,
+          if (!_isPremium) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.white.withOpacity(0.08),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  progress >= 1.0 ? Colors.red.shade700 : _gold,
+                ),
+                minHeight: 4,
               ),
-              child: const Text('Перейти на Premium', style: TextStyle(fontWeight: FontWeight.w700)),
             ),
-          ),
+            const SizedBox(height: 8),
+            Text(
+              left > 0 ? 'Осталось $left подборок' : 'Лимит исчерпан — перейдите на Premium',
+              style: TextStyle(
+                color: left > 0 ? Colors.white.withOpacity(0.35) : Colors.red.shade400,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _gold,
+                  foregroundColor: _bg,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
+                ),
+                child: const Text('Перейти на Premium', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -78,6 +78,7 @@ class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
   int _favoritesEpoch = 0;
   int _historyEpoch = 0;
+  int _profileEpoch = 0;
 
   static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0D0D0D);
@@ -92,7 +93,7 @@ class _MainNavigationState extends State<MainNavigation> {
           const HomeScreen(),
           FavoritesScreen(key: ValueKey(_favoritesEpoch), onGoHome: () => setState(() => _currentIndex = 0)),
           HistoryScreen(key: ValueKey(_historyEpoch)),
-          const ProfileScreen(),
+          ProfileScreen(key: ValueKey(_profileEpoch)),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -132,6 +133,7 @@ class _MainNavigationState extends State<MainNavigation> {
           setState(() {
             if (index == 1) _favoritesEpoch++;
             if (index == 2) _historyEpoch++;
+            if (index == 3) _profileEpoch++;
             _currentIndex = index;
           });
         },
