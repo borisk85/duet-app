@@ -47,10 +47,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     bool undone = false;
 
-    // Закрываем предыдущий SnackBar если есть — это зафиксирует прошлое удаление через .closed
-    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    // Берём локальный ScaffoldMessenger один раз и используем его для всех
+    // операций — чтобы не зависеть от состояния context после rebuild.
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.removeCurrentSnackBar();
 
-    final controller = ScaffoldMessenger.of(context).showSnackBar(
+    final controller = messenger.showSnackBar(
       SnackBar(
         content: const Text(
           'Удалено',
@@ -92,21 +94,27 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bg,
-      appBar: AppBar(
+    // ScaffoldMessenger обёрнут локально вокруг этой вкладки чтобы SnackBar
+    // "Удалено · Отменить" жил только внутри Избранного, а не следовал за
+    // пользователем по другим вкладкам и не зависал. Без этой обёртки SnackBar
+    // привязывается к root MaterialApp и не управляется свайпами по нав-бару.
+    return ScaffoldMessenger(
+      child: Scaffold(
         backgroundColor: _bg,
-        surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'Избранное',
-          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+        appBar: AppBar(
+          backgroundColor: _bg,
+          surfaceTintColor: Colors.transparent,
+          title: const Text(
+            'Избранное',
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+          ),
         ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator(color: _gold))
+            : _favorites.isEmpty
+                ? _buildEmpty()
+                : _buildList(),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: _gold))
-          : _favorites.isEmpty
-              ? _buildEmpty()
-              : _buildList(),
     );
   }
 
