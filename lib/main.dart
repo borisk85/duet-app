@@ -53,16 +53,87 @@ class AuthGate extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Color(0xFF0D0D0D),
-            body: Center(
-              child: CircularProgressIndicator(color: Color(0xFFC9A84C)),
-            ),
-          );
+          return const _SplashScreen();
         }
         if (snapshot.data == null) return const AuthScreen();
         return const MainNavigation();
       },
+    );
+  }
+}
+
+/// Splash-экран который показывается пока Firebase проверяет auth state.
+/// Заменяет голый CircularProgressIndicator. Содержит логотип "Дуэт" с лёгкой
+/// пульсацией (1.0 ↔ 1.03) и tagline. Совпадает по дизайну с native splash —
+/// переход бесшовный, пользователь не видит ни моргания, ни смены кадра.
+class _SplashScreen extends StatefulWidget {
+  const _SplashScreen();
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen>
+    with SingleTickerProviderStateMixin {
+  static const _gold = Color(0xFFC9A84C);
+  static const _bg = Color(0xFF0D0D0D);
+
+  late final AnimationController _pulse;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    // Subtle pulse 1.0 → 1.03 (по решению сеньора, не 1.05 — чтобы не было дёшево)
+    _scale = Tween<double>(begin: 1.0, end: 1.03).animate(
+      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _bg,
+      body: Center(
+        child: ScaleTransition(
+          scale: _scale,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🥂', style: TextStyle(fontSize: 56)),
+              const SizedBox(height: 20),
+              const Text(
+                'Дуэт',
+                style: TextStyle(
+                  color: _gold,
+                  fontSize: 52,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 4,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'AI-эксперт по напиткам к еде',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.4),
+                  fontSize: 14,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
