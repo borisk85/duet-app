@@ -83,6 +83,18 @@ class ApiService {
     return data.map((r) => PairingResponse.fromJson(r)).toList();
   }
 
+  static Future<bool> clearHistory() async {
+    final headers = await _headers();
+    try {
+      final res = await http
+          .delete(Uri.parse('$_baseUrl/history'), headers: headers)
+          .timeout(const Duration(seconds: 15));
+      return res.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── Избранное ─────────────────────────────────────────────────────────────
 
   static Future<List<PairingResponse>> getFavorites() async {

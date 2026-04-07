@@ -32,6 +32,51 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
+  Future<void> _confirmClear() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.75),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.white.withOpacity(0.12), width: 1),
+        ),
+        title: const Text(
+          'Очистить историю?',
+          style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'Все ваши подборки будут удалены навсегда. Это действие нельзя отменить.',
+          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.4),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              'Отмена',
+              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              'Очистить',
+              style: TextStyle(color: Colors.red.shade400, fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      final ok = await ApiService.clearHistory();
+      if (ok && mounted) {
+        setState(() => _history = []);
+      }
+    }
+  }
+
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date).inDays;
@@ -54,7 +99,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         actions: _history.isNotEmpty
             ? [
                 TextButton(
-                  onPressed: () => setState(() => _history = []),
+                  onPressed: _confirmClear,
                   child: Text('Очистить', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13)),
                 ),
               ]

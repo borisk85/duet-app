@@ -511,6 +511,19 @@ def get_history(request: Request):
     finally:
         pool.putconn(conn)
 
+@app.delete("/history")
+def clear_history(request: Request):
+    user_info = _verify_token_sync(request)
+    pool = get_pool()
+    conn = pool.getconn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM pairings WHERE firebase_uid = %s", (user_info["uid"],))
+        conn.commit()
+        return {"cleared": True}
+    finally:
+        pool.putconn(conn)
+
 @app.get("/favorites")
 def get_favorites(request: Request):
     user_info = _verify_token_sync(request)
