@@ -1,6 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/pairing_result.dart';
@@ -43,7 +49,12 @@ class _ResultScreenState extends State<ResultScreen>
   bool _isLoading = true;
   bool _isSaved = false;
   bool _isSavedChecked = false;
+  bool _isSharing = false;
   String? _error;
+
+  // GlobalKey для RepaintBoundary вокруг первой карточки + footer "Дуэт".
+  // Используется в _shareFirstCard для рендера в PNG через RenderRepaintBoundary.toImage.
+  final GlobalKey _shareCardKey = GlobalKey();
 
   late final AnimationController _pulseController;
 
@@ -155,34 +166,172 @@ class _ResultScreenState extends State<ResultScreen>
     return Scaffold(
       backgroundColor: _bg,
       appBar: _buildAppBar(context),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      body: Stack(
         children: [
-          _buildDishHeader(),
-          const SizedBox(height: 24),
-          _buildResultsLabel(),
-          const SizedBox(height: 12),
-          if (_isLoading) ...[
-            _buildSkeletonCard(),
-            _buildSkeletonCard(),
-            _buildSkeletonCard(),
-          ] else if (_error != null)
-            _buildError()
-          else ...[
-            ...(_response!.results.asMap().entries.map(
-                  (e) => _buildResultCard(e.key + 1, e.value),
-                )),
-            const SizedBox(height: 24),
-            _buildSaveButton(context),
-          ],
-          const SizedBox(height: 16),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            children: [
+              _buildDishHeader(),
+              const SizedBox(height: 24),
+              _buildResultsLabel(),
+              const SizedBox(height: 12),
+              if (_isLoading) ...[
+                _buildSkeletonCard(),
+                _buildSkeletonCard(),
+                _buildSkeletonCard(),
+              ] else if (_error != null)
+                _buildError()
+              else ...[
+                ...(_response!.results.asMap().entries.map(
+                      (e) => _buildResultCard(e.key + 1, e.value),
+                    )),
+                const SizedBox(height: 24),
+                _buildSaveButton(context),
+              ],
+              const SizedBox(height: 16),
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
+            ],
+          ),
+          // Offscreen-виджет для share: первая карточка + футер "Дуэт".
+          // Position за пределами экрана (-2000), но в дереве виджетов —
+          // RepaintBoundary рендерится и доступен через GlobalKey.
+          if (_response != null && _response!.results.isNotEmpty)
+            Positioned(
+              left: -2000,
+              top: 0,
+              child: _buildShareableCard(_response!.results.first),
+            ),
         ],
       ),
     );
   }
 
+  /// Виджет для share — первая карточка + футер "Дуэт".
+  /// Рендерится offscreen, в скриншот идёт ровно эта композиция.
+  Widget _buildShareableCard(PairingResult result) {
+    return RepaintBoundary(
+      key: _shareCardKey,
+      child: Container(
+        width: 380,
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(color: _bg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Заголовок над карточкой: блюдо/напиток
+            Row(
+              children: [
+                Text(
+                  (_response?.mode ?? 'food_to_alcohol') == 'food_to_alcohol' ? '🍽️' : '🥂',
+                  style: const TextStyle(fontSize: 22),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _response?.dish ?? '',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Сама карточка результата (упрощённая для шаринга)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: _card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _gold.withOpacity(0.4), width: 1.5),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Text(result.resolvedEmoji, style: const TextStyle(fontSize: 18)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          result.alcoholType,
+                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    result.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    result.brand,
+                    style: const TextStyle(color: _goldText, fontSize: 14),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    result.reason,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.75),
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
+                    maxLines: 6,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            // Футер "Дуэт" — брендинг без URL по решению маркетинга
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    'Дуэт',
+                    style: TextStyle(
+                      color: _gold,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'AI-эксперт по напиткам к еде',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.4),
+                      fontSize: 11,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   PreferredSizeWidget _buildAppBar(BuildContext context) {
+    // Кнопка Поделиться активна только когда подборка реально готова (есть results).
+    final canShare = _response != null && _response!.results.isNotEmpty && !_isSharing;
     return AppBar(
       backgroundColor: _bg,
       surfaceTintColor: Colors.transparent,
@@ -195,7 +344,71 @@ class _ResultScreenState extends State<ResultScreen>
         style: TextStyle(color: _gold, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 1),
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          icon: _isSharing
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: _gold),
+                )
+              : Icon(
+                  Icons.ios_share_rounded,
+                  color: canShare ? _gold : Colors.white.withOpacity(0.2),
+                  size: 22,
+                ),
+          tooltip: 'Поделиться',
+          onPressed: canShare ? _shareFirstCard : null,
+        ),
+        const SizedBox(width: 4),
+      ],
     );
+  }
+
+  /// Делает скриншот первой карточки результата с футером "Дуэт" и расшаривает
+  /// его через системный share sheet. Используется RepaintBoundary с GlobalKey
+  /// + RenderRepaintBoundary.toImage → PNG → файл во временной папке → Share.shareXFiles.
+  /// Целевой канал: Instagram Stories (вертикальная компактная карточка с брендингом).
+  Future<void> _shareFirstCard() async {
+    if (_response == null || _response!.results.isEmpty) return;
+    setState(() => _isSharing = true);
+    HapticFeedback.lightImpact();
+    try {
+      // Ждём один кадр чтобы offscreen RepaintBoundary гарантированно отрендерился
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      final boundary = _shareCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) throw Exception('share boundary not found');
+
+      // pixelRatio 3.0 = retina-качество, хорошо смотрится в Stories
+      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) throw Exception('toByteData failed');
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+
+      // Сохраняем во временную папку — Android share требует файл, не bytes напрямую
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/duet_pairing_${DateTime.now().millisecondsSinceEpoch}.png').create();
+      await file.writeAsBytes(pngBytes);
+
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'image/png')],
+        text: 'Дуэт — AI-эксперт по напиткам к еде',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Не удалось поделиться. Попробуйте ещё раз.'),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSharing = false);
+    }
   }
 
   Widget _buildDishHeader() {
