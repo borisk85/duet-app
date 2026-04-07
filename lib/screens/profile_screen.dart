@@ -92,6 +92,18 @@ class _ProfileScreenState extends State<ProfileScreen>
     await prefs.setString('detail_level', _detailLevel);
   }
 
+  // Русское склонение по числу: 1 → подборка, 2-4 → подборки, 5+ → подборок
+  // С учётом исключений 11-14 (всегда "подборок") и десятков (21 → подборка)
+  String _pairingsLeftText(int n) {
+    final mod10 = n % 10;
+    final mod100 = n % 100;
+    if (mod10 == 1 && mod100 != 11) return 'Осталась $n подборка';
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+      return 'Осталось $n подборки';
+    }
+    return 'Осталось $n подборок';
+  }
+
   Future<void> _confirmSignOut() async {
     HapticFeedback.lightImpact();
     final user = AuthService.currentUser;
@@ -556,7 +568,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              left > 0 ? 'Осталось $left подборок' : 'Лимит исчерпан — перейдите на Premium',
+              left > 0 ? _pairingsLeftText(left) : 'Лимит исчерпан — перейдите на Premium',
               style: TextStyle(
                 color: left > 0 ? Colors.white.withOpacity(0.35) : Colors.red.shade400,
                 fontSize: 12,
