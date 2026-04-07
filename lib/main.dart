@@ -110,18 +110,16 @@ class _SplashScreenState extends State<_SplashScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🥂', style: TextStyle(fontSize: 56)),
-              const SizedBox(height: 20),
               const Text(
                 'Дуэт',
                 style: TextStyle(
                   color: _gold,
-                  fontSize: 52,
+                  fontSize: 56,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 4,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Text(
                 'AI-эксперт по напиткам к еде',
                 style: TextStyle(

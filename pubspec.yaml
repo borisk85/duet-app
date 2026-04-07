@@ -61,10 +61,8 @@ dev_dependencies:
 # и кастомный список фонов: тёмный #0D0D0D
 flutter_native_splash:
   color: "#0D0D0D"
-  image: assets/splash/duet_logo.png
   android_12:
     color: "#0D0D0D"
-    image: assets/splash/duet_logo.png
     icon_background_color: "#0D0D0D"
   android: true
   ios: true

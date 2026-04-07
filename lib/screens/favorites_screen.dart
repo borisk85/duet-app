@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/pairing_result.dart';
 import '../services/api_service.dart';
@@ -26,10 +27,24 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   // Источник данных: Dismissible.onUpdate(DismissUpdateDetails details) → details.progress
   final Map<Key, double> _swipeProgress = {};
 
+  // OverlayEntry для undo. Используется вместо SnackBar потому что SnackBar
+  // привязывается к root MaterialApp ScaffoldMessenger и не убирается при
+  // переключении вкладок (зависает на всех экранах). Overlay с Timer чистый.
+  OverlayEntry? _undoOverlay;
+  Timer? _undoTimer;
+
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _undoTimer?.cancel();
+    _undoOverlay?.remove();
+    _undoOverlay = null;
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -44,48 +59,88 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final removedItem = _favorites[index];
     final removedIndex = index;
     setState(() => _favorites.removeAt(index));
+    _showUndoOverlay(removedItem, removedIndex);
+  }
+
+  void _hideUndoOverlay() {
+    _undoTimer?.cancel();
+    _undoTimer = null;
+    _undoOverlay?.remove();
+    _undoOverlay = null;
+  }
+
+  void _showUndoOverlay(PairingResponse removedItem, int removedIndex) {
+    // Закрываем предыдущий overlay если он есть и фиксируем то удаление в БД
+    if (_undoOverlay != null) {
+      _hideUndoOverlay();
+    }
 
     bool undone = false;
+    final overlay = Overlay.of(context);
 
-    // Берём локальный ScaffoldMessenger один раз и используем его для всех
-    // операций — чтобы не зависеть от состояния context после rebuild.
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.removeCurrentSnackBar();
-
-    final controller = messenger.showSnackBar(
-      SnackBar(
-        content: const Text(
-          'Удалено',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-        ),
-        backgroundColor: _card,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.white.withOpacity(0.1)),
-        ),
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 80),
-        duration: const Duration(seconds: 3),
-        elevation: 0,
-        action: SnackBarAction(
-          label: 'Отменить',
-          textColor: _gold,
-          onPressed: () {
-            undone = true;
-            setState(() {
-              if (removedIndex <= _favorites.length) {
-                _favorites.insert(removedIndex, removedItem);
-              } else {
-                _favorites.add(removedItem);
-              }
-            });
-          },
+    final entry = OverlayEntry(
+      builder: (ctx) => Positioned(
+        left: 20,
+        right: 20,
+        bottom: 80,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: _card,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Удалено',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 14),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    undone = true;
+                    _hideUndoOverlay();
+                    setState(() {
+                      if (removedIndex <= _favorites.length) {
+                        _favorites.insert(removedIndex, removedItem);
+                      } else {
+                        _favorites.add(removedItem);
+                      }
+                    });
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Text(
+                      'Отменить',
+                      style: TextStyle(color: _gold, fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
 
-    controller.closed.then((reason) {
-      // Если пользователь не нажал "Отменить" — фиксируем удаление в БД
+    _undoOverlay = entry;
+    overlay.insert(entry);
+
+    // Жёсткий таймер на 3 секунды — убирает overlay в любом случае.
+    // Не зависит от ScaffoldMessenger, не зависит от вкладки, не зависит ни от чего.
+    _undoTimer = Timer(const Duration(seconds: 3), () {
+      _hideUndoOverlay();
       if (!undone && removedItem.id != null) {
         ApiService.removeFavorite(removedItem.id!);
       }
@@ -94,27 +149,21 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ScaffoldMessenger обёрнут локально вокруг этой вкладки чтобы SnackBar
-    // "Удалено · Отменить" жил только внутри Избранного, а не следовал за
-    // пользователем по другим вкладкам и не зависал. Без этой обёртки SnackBar
-    // привязывается к root MaterialApp и не управляется свайпами по нав-бару.
-    return ScaffoldMessenger(
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: _bg,
+      appBar: AppBar(
         backgroundColor: _bg,
-        appBar: AppBar(
-          backgroundColor: _bg,
-          surfaceTintColor: Colors.transparent,
-          title: const Text(
-            'Избранное',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
-          ),
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
+          'Избранное',
+          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
         ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator(color: _gold))
-            : _favorites.isEmpty
-                ? _buildEmpty()
-                : _buildList(),
       ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: _gold))
+          : _favorites.isEmpty
+              ? _buildEmpty()
+              : _buildList(),
     );
   }
 
