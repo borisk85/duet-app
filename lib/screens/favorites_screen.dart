@@ -15,9 +15,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0D0D0D);
   static const _card = Color(0xFF1A1A1A);
+  // Material Design red — стандартный цвет для destructive actions
+  static const _deleteRed = Color(0xFFE53935);
 
   List<PairingResponse> _favorites = [];
   bool _loading = true;
+
+  // Прогресс свайпа для каждой карточки (key Dismissible → 0.0..1.0).
+  // Используется для анимации иконки корзины — scale растёт по мере свайпа.
+  // Источник данных: Dismissible.onUpdate(DismissUpdateDetails details) → details.progress
+  final Map<Key, double> _swipeProgress = {};
 
   @override
   void initState() {
@@ -157,9 +164,22 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Widget _buildCard(PairingResponse item, int index) {
     final firstResult = item.results.isNotEmpty ? item.results.first : null;
+    final cardKey = Key('fav_${item.dish}_${item.budget}_${item.createdAt.millisecondsSinceEpoch}');
+    // 0.0 пока пользователь не свайпает, растёт до 1.0 при полном свайпе
+    final progress = _swipeProgress[cardKey] ?? 0.0;
+    // Scale корзинки: от 0.7 в покое до 1.2 в полном свайпе. Линейная интерполяция.
+    final iconScale = 0.7 + (progress.clamp(0.0, 1.0) * 0.5);
     return Dismissible(
-      key: Key('fav_${item.dish}_${item.budget}_${item.createdAt.millisecondsSinceEpoch}'),
+      key: cardKey,
       direction: DismissDirection.endToStart,
+      onUpdate: (details) {
+        // Триггер только при заметном изменении — снижает количество ребилдов
+        final newProgress = details.progress;
+        final oldProgress = _swipeProgress[cardKey] ?? 0.0;
+        if ((newProgress - oldProgress).abs() > 0.02) {
+          setState(() => _swipeProgress[cardKey] = newProgress);
+        }
+      },
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -171,23 +191,31 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           child: Container(
             width: 80,
             decoration: const BoxDecoration(
-              color: Color(0xFF5C1010),
+              color: _deleteRed,
               borderRadius: BorderRadius.only(
                 topRight: Radius.circular(14),
                 bottomRight: Radius.circular(14),
               ),
             ),
             child: Center(
-              child: Icon(
-                Icons.delete_rounded,
-                color: Colors.white.withOpacity(0.85),
-                size: 20,
+              child: AnimatedScale(
+                scale: iconScale,
+                duration: const Duration(milliseconds: 80),
+                curve: Curves.easeOut,
+                child: const Icon(
+                  Icons.delete_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
             ),
           ),
         ),
       ),
-      onDismissed: (_) => _remove(index),
+      onDismissed: (_) {
+        _swipeProgress.remove(cardKey);
+        _remove(index);
+      },
       child: GestureDetector(
         onTap: () => Navigator.push(
           context,
