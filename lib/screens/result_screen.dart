@@ -669,6 +669,29 @@ class _ResultScreenState extends State<ResultScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (index == 1) ...[
+                  // Бейдж "Лучший выбор" — делает иерархию явной.
+                  // Золотая рамка карточки + золотой номер — немой сигнал,
+                  // бейдж расшифровывает его словами для пользователя.
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _card,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: _gold.withOpacity(0.5), width: 1),
+                    ),
+                    child: const Text(
+                      'Лучший выбор',
+                      style: TextStyle(
+                        color: _gold,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                ],
                 Row(
                   children: [
                     Text(result.resolvedEmoji, style: const TextStyle(fontSize: 14)),

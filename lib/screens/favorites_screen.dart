@@ -229,6 +229,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return Dismissible(
       key: cardKey,
       direction: DismissDirection.endToStart,
+      // Короткий resize чтобы не оставался "фантом" карточки после быстрого свайпа.
+      // Дефолт 300мс давал серый шлейф цвета _card на фоне _bg. 150мс — чисто.
+      resizeDuration: const Duration(milliseconds: 150),
       onUpdate: (details) {
         // Триггер только при заметном изменении — снижает количество ребилдов
         final newProgress = details.progress;
@@ -240,7 +243,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: _card,
+          // _bg (а не _card) — фон background при свайпе совпадает с фоном экрана.
+          // Раньше был _card = такой же как у карточки → серый шлейф на 300мс.
+          color: _bg,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Align(
