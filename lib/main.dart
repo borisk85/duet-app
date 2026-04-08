@@ -241,6 +241,10 @@ class _MainNavigationState extends State<MainNavigation> {
       child: GestureDetector(
         onTap: () {
           HapticFeedback.lightImpact();
+          // Снимаем фокус с любого TextField перед сменой вкладки. IndexedStack
+          // сохраняет state вкладок (в том числе focus) — без unfocus возврат
+          // на Подбор приводил к всплытию клавиатуры и прыжку кнопки вверх.
+          FocusScope.of(context).unfocus();
           setState(() {
             if (index == 1) _favoritesEpoch++;
             if (index == 2) _historyEpoch++;
