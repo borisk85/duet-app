@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import hashlib
 import random
@@ -218,11 +219,11 @@ GLOBAL_BRANDS_REFERENCE = """ГЛОБАЛЬНАЯ БАЗА ХОДОВЫХ БРЕ
 ПРАВИЛО: при подборке используй РАЗНЫЕ бренды и стили. Не повторяй один и тот же бренд в трёх карточках одной подборки. Между запросами от пользователя — варьируй, не давай Krombacher на каждый второй запрос. У тебя сотни качественных альтернатив, используй ширину базы."""
 
 REGION_AVAILABILITY = {
-    "Казахстан": "Бренды доступные в Алматы и Астане. Помимо локальных (Шымкентское, Карагандинское, Тянь-Шань) широко представлены: международные пива (Corona Extra, Heineken, Carlsberg, Krombacher, Paulaner, Bitburger, Erdinger, Hoegaarden, Leffe, Pilsner Urquell, Budweiser Budvar), крафтовые казахстанские пивоварни (Tsarka, Brewster, Mezhdu Strok), европейские вина, грузинские вина (Saperavi, Mukuzani, Kindzmarauli), армянские коньяки (Ararat, Noy), импортные виски и текила. НЕ зацикливайся на самых очевидных местных брендах.",
-    "Россия":    "Бренды доступные в крупных городах РФ с учётом ограничений импорта 2024-2026. Помимо очевидных (Балтика, Жигулёвское) широко представлены: российские крафтовые пивоварни (AF Brew, Salden's, Konix, Stamm, Brewlok, Zagovor), доступные импортные пива (Krombacher, Paulaner, Hoegaarden, Pilsner Urquell, Bitburger через параллельный импорт), грузинские вина (Saperavi, Mukuzani), крымские и кубанские вина (Massandra, Inkerman, Fanagoria, Lefkadia), армянские и российские коньяки (Ararat, Kvint, Kizlyar), азиатские крепкие напитки. НЕ предлагай Балтику и Жигулёвское по умолчанию — давай разнообразие.",
-    "Украина":   "Бренды доступные в Киеве и крупных городах Украины. Помимо локальных (Львівське, Чернігівське, Оболонь) широко представлены: украинские крафтовые пивоварни (Varvar, Pravda, Volynski Browar), европейские пива (Heineken, Carlsberg, Krombacher, Paulaner), европейские вина, грузинские вина, украинские игристые. Давай разнообразие, не зацикливайся на массовых брендах.",
-    "Беларусь":  "Бренды доступные в Минске и крупных городах Беларуси. Помимо локальных (Лидское, Аліварыя, Крыніца) широко представлены: международные пива (Heineken, Carlsberg, Krombacher), европейские и грузинские вина, российские крафтовые пивоварни. Не зацикливайся на самых очевидных местных брендах.",
-    "СНГ":       "Универсальные бренды присутствующие во всех странах СНГ: международные пива (Corona Extra, Heineken, Carlsberg, Krombacher, Paulaner, Hoegaarden, Pilsner Urquell), европейские и грузинские вина, армянские коньяки, импортные виски и крепкий алкоголь. Давай разнообразие, не зацикливайся на одной стране-производителе.",
+    "Казахстан": "🏪 СЕТЕВЫЕ МАГАЗИНЫ КАЗАХСТАНА: рекомендуй ТОЛЬКО бренды которые физически лежат на полках Kaspi Magazin, Magnum, Small. Если бренд не продаётся в этих сетях — НЕ предлагай, возьми массовый аналог того же стиля. Доступно в КЗ: лагеры (Heineken, Corona, Carlsberg, Stella Artois, Tuborg, Becks, Holsten, Warsteiner, Bitburger, Krombacher, Pilsner Urquell, Budweiser Budvar), Guinness, местные (Tянь-Шань, Карагандинское, Шымкентское), грузинские вина (Saperavi, Mukuzani, Kindzmarauli от Teliani Valley / Tbilvino), армянские коньяки (Ararat, Noy), массовые виски (Jameson, Ballantine's, Johnnie Walker, Chivas, Jack Daniel's, Glenfiddich), массовые коньяки (Hennessy, Martell, Remy Martin), водка (Absolut, Finlandia), текила (Olmeca, Jose Cuervo).",
+    "Россия":    "🏪 СЕТЕВЫЕ МАГАЗИНЫ РФ: рекомендуй ТОЛЬКО бренды которые физически лежат в Магнит, Пятёрочка, Перекрёсток, Ашан, Лента, ВинЛаб, КрасноеБелое. Если бренд не продаётся в этих сетях — НЕ предлагай. Доступно в РФ с учётом санкций 2024-2026: лагеры (Балтика, Жигулёвское, Heineken, Carlsberg, Krombacher, Bitburger по параллельному импорту), российский крафт (AF Brew, Salden's, Konix), грузинские вина (Saperavi, Mukuzani от Teliani Valley), крымские и кубанские (Massandra, Inkerman, Fanagoria, Lefkadia, Абрау-Дюрсо), коньяки (Ararat, Kvint, Kizlyar, Hennessy), массовые виски (Jameson, Chivas, Johnnie Walker). НЕ давай Балтику/Жигулёвское по умолчанию — варьируй.",
+    "Украина":   "🏪 СЕТЕВЫЕ МАГАЗИНЫ УКРАИНЫ: рекомендуй ТОЛЬКО бренды которые физически лежат в АТБ, Сільпо, Novus, Fozzy, WineTime. Доступно в UA: местные (Львівське, Чернігівське, Оболонь), украинский крафт (Varvar, Pravda, Volynski Browar), европейские лагеры (Heineken, Carlsberg, Krombacher), европейские и грузинские вина.",
+    "Беларусь":  "🏪 СЕТЕВЫЕ МАГАЗИНЫ БЕЛАРУСИ: рекомендуй ТОЛЬКО бренды которые физически лежат в Евроопт, Hippo, Соседи. Доступно в BY: местные (Лидское, Аліварыя, Крыніца), лагеры (Heineken, Carlsberg, Krombacher), грузинские вина.",
+    "СНГ":       "🏪 УНИВЕРСАЛЬНЫЕ МАГАЗИНЫ СНГ: рекомендуй ТОЛЬКО бренды доступные в массовых сетевых магазинах всех стран региона: международные лагеры (Heineken, Corona, Carlsberg, Stella, Becks, Tuborg, Krombacher, Bitburger, Pilsner Urquell, Budweiser Budvar), Guinness, европейские и грузинские вина, массовые коньяки и виски из белого списка.",
 }
 
 DETAIL_LEVEL_MAP = {
@@ -497,6 +498,17 @@ async def pair_stream(request: Request, req: PairRequest):
                 raw = raw.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
             data = json.loads(raw)
             results = data["results"][:3]
+            # Слой 2 защиты brand: убираем скобки со страной/пояснением из brand.
+            # "Köstritzer Schwarzbier (Германия)" → "Köstritzer Schwarzbier"
+            # Причина: brand идёт в поисковую ссылку Kaspi/Magnum — "(Германия)"
+            # в запросе ломает поиск. Также срезаем trailing " или ..." / " / ..."
+            # как защитный слой на случай если Claude проигнорировал промпт-правило.
+            for r in results:
+                brand = r.get("brand", "")
+                if isinstance(brand, str) and brand:
+                    brand = re.sub(r"\s*\([^)]*\)", "", brand)
+                    brand = re.split(r"\s+(?:или|/|,|\sлибо\s|\s—\s)", brand, maxsplit=1)[0]
+                    r["brand"] = brand.strip()
             # Гарантия что why_it_works существует ТОЛЬКО в Эксперт-режиме.
             # Если Claude вернул его в Просто/Стандарт — вырезаем перед сохранением.
             if req.detail_level != "expert":

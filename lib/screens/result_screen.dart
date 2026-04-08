@@ -122,6 +122,21 @@ class _ResultScreenState extends State<ResultScreen>
       if (data is Map && data['error'] != null) {
         throw Exception(data['error'].toString());
       }
+
+      // Защитный слой на brand: срезаем скобки со страной "(Германия)" и
+      // любые trailing альтернативы ("X или Y", "X / Y"). Бэкенд делает то же
+      // самое при сохранении, но кеш может содержать старые записи — чистим
+      // на всякий случай и на фронте. Цель — чтобы ссылка в Kaspi/Magnum была
+      // чистая и магазин находил товар.
+      final resultsList = (data['results'] as List);
+      for (final r in resultsList) {
+        if (r is Map && r['brand'] is String) {
+          var brand = r['brand'] as String;
+          brand = brand.replaceAll(RegExp(r'\s*\([^)]*\)'), '');
+          brand = brand.split(RegExp(r'\s+(?:или|/|,|\sлибо\s|\s—\s)')).first;
+          r['brand'] = brand.trim();
+        }
+      }
       final prefs = await SharedPreferences.getInstance();
       final region = prefs.getString('region') ?? 'СНГ';
 
@@ -399,9 +414,10 @@ class _ResultScreenState extends State<ResultScreen>
       final file = await File('${tempDir.path}/duet_pairing_${DateTime.now().millisecondsSinceEpoch}.png').create();
       await file.writeAsBytes(pngBytes);
 
+      // Без параметра text — tagline уже зашит на самом изображении,
+      // WhatsApp/Telegram не должны добавлять дублирующую подпись.
       await Share.shareXFiles(
         [XFile(file.path, mimeType: 'image/png')],
-        text: 'Дуэт — AI-эксперт по напиткам к еде',
       );
     } catch (e) {
       if (mounted) {
@@ -892,8 +908,14 @@ class _ResultScreenState extends State<ResultScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
         ),
+        // Sequential fade: старый текст полностью исчезает в первой половине
+        // анимации, новый появляется во второй. Без этого cross-fade показывал
+        // одновременно "Сохранить" и "Сохранено" — буквы "ть" и "но" в конце
+        // накладывались → выглядело как посимвольная перепечатка.
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 320),
+          switchInCurve: const Interval(0.5, 1.0, curve: Curves.easeIn),
+          switchOutCurve: const Interval(0.0, 0.5, curve: Curves.easeOut),
           transitionBuilder: (child, animation) => FadeTransition(
             opacity: animation,
             child: child,
