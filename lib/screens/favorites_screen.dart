@@ -78,15 +78,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     bool undone = false;
     final overlay = Overlay.of(context);
 
-    // Overlay поднят выше bottom nav bar (60 + safe area + 10 зазор).
-    // Раньше был bottom: 80 — визуально перекрывал навигацию на устройствах
-    // с жестовой навигацией (Xiaomi MIUI ~24-34px safe area внизу).
-    final bottomInset = MediaQuery.of(context).padding.bottom;
+    // Overlay вставляется в root Overlay.of(context) — positioning идёт
+    // от физического низа экрана, не от body. bottom nav bar 60px + gesture
+    // bar ~24-34px + зазор = ~100. MediaQuery.padding.bottom внутри body
+    // FavoritesScreen возвращает 0 (body уже под SafeArea родителя), так
+    // что хардкод надёжнее — гарантированно выше навбара на всех устройствах.
     final entry = OverlayEntry(
       builder: (ctx) => Positioned(
         left: 20,
         right: 20,
-        bottom: 60 + bottomInset + 10,
+        bottom: 100,
         child: Material(
           color: Colors.transparent,
           child: Container(
