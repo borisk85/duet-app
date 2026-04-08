@@ -560,9 +560,10 @@ class _ProfileScreenState extends State<ProfileScreen>
               child: LinearProgressIndicator(
                 value: progress,
                 backgroundColor: Colors.white.withOpacity(0.08),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  progress >= 1.0 ? Colors.red.shade700 : _gold,
-                ),
+                // Золотой всегда, даже когда лимит исчерпан. Красный = цвет ошибки,
+                // а тут состояние продукта (не баг) — золото в контексте Premium
+                // читается как приглашение, а не как тревога.
+                valueColor: const AlwaysStoppedAnimation<Color>(_gold),
                 minHeight: 4,
               ),
             ),
@@ -570,23 +571,11 @@ class _ProfileScreenState extends State<ProfileScreen>
             Text(
               left > 0 ? _pairingsLeftText(left) : 'Лимит исчерпан — перейдите на Premium',
               style: TextStyle(
-                color: left > 0 ? Colors.white.withOpacity(0.35) : Colors.red.shade400,
+                // Золотой на исчерпанном лимите = CTA-цвет, не тревога.
+                color: left > 0 ? Colors.white.withOpacity(0.35) : _gold,
                 fontSize: 12,
+                fontWeight: left > 0 ? FontWeight.w400 : FontWeight.w600,
               ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Icon(Icons.schedule_rounded, color: Colors.white.withOpacity(0.35), size: 14),
-                const SizedBox(width: 6),
-                Text(
-                  'Premium скоро будет доступен',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
             ),
           ],
         ],

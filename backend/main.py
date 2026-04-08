@@ -529,12 +529,24 @@ def get_history(request: Request):
 
 @app.delete("/history")
 def clear_history(request: Request):
+    """Очистка истории + сброс счётчика pairing_count.
+
+    Раньше только удаляла записи из pairings, но лимит считается по
+    users.pairing_count — после очистки счётчик оставался 10/10 и Free
+    пользователь не мог продолжать. Теперь сбрасываем оба: клик "Очистить
+    историю" = полный reset Free-лимита.
+
+    После интеграции RevenueCat возможно нужно будет разделить:
+    "очистить историю" отдельно от "сбросить лимит" — но в MVP это один
+    экшен для простоты UX.
+    """
     user_info = _verify_token_sync(request)
     pool = get_pool()
     conn = pool.getconn()
     try:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM pairings WHERE firebase_uid = %s", (user_info["uid"],))
+            cur.execute("UPDATE users SET pairing_count = 0 WHERE firebase_uid = %s", (user_info["uid"],))
         conn.commit()
         return {"cleared": True}
     finally:

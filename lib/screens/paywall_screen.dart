@@ -10,8 +10,8 @@ import 'package:flutter/services.dart';
 /// но не смог из-за лимита. Это превращает блокировку в момент максимальной мотивации
 /// (психологически — конверсия выше когда блокировка совпадает с активным желанием).
 ///
-/// Пока RevenueCat не подключён, кнопка "Перейти на Premium" показывает SnackBar
-/// "скоро будет доступен". После интеграции RevenueCat — открывает purchase flow.
+/// Пока RevenueCat не подключён, кнопка "Перейти на Premium" даёт только haptic.
+/// После интеграции RevenueCat — открывает purchase flow.
 class PaywallScreen extends StatelessWidget {
   /// То что пользователь хотел подобрать (блюдо или напиток) — для персонализации
   final String dish;
@@ -45,7 +45,11 @@ class PaywallScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              // Нижний padding 40 (не 24) чтобы TextButton "Может быть позже"
+              // не попадал в system gesture exclusion zone Android. На Xiaomi
+              // с жестовой навигацией нижние ~24-40dp перехватываются системой,
+              // кнопка срабатывала только с 4-5 попытки.
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -177,12 +181,14 @@ class PaywallScreen extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  // Кнопка покупки (пока показывает SnackBar — RevenueCat не интегрирован)
+                  // Кнопка покупки (только haptic — RevenueCat не интегрирован).
+                  // Раньше был SnackBar "Premium скоро будет доступен", но он
+                  // противоречил кнопке "Перейти на Premium" и путал пользователя.
                   SizedBox(
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton(
-                      onPressed: () => _showComingSoon(context),
+                      onPressed: () => HapticFeedback.mediumImpact(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _gold,
                         foregroundColor: _bg,
@@ -240,32 +246,4 @@ class PaywallScreen extends StatelessWidget {
     );
   }
 
-  void _showComingSoon(BuildContext context) {
-    HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: const [
-            Text('⚡', style: TextStyle(fontSize: 18)),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Premium скоро будет доступен',
-                style: TextStyle(color: _gold, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: _card,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: _gold.withOpacity(0.4), width: 1),
-        ),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-        elevation: 0,
-      ),
-    );
-  }
 }

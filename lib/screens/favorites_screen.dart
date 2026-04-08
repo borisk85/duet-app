@@ -78,11 +78,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     bool undone = false;
     final overlay = Overlay.of(context);
 
+    // Overlay поднят выше bottom nav bar (60 + safe area + 10 зазор).
+    // Раньше был bottom: 80 — визуально перекрывал навигацию на устройствах
+    // с жестовой навигацией (Xiaomi MIUI ~24-34px safe area внизу).
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     final entry = OverlayEntry(
       builder: (ctx) => Positioned(
         left: 20,
         right: 20,
-        bottom: 80,
+        bottom: 60 + bottomInset + 10,
         child: Material(
           color: Colors.transparent,
           child: Container(

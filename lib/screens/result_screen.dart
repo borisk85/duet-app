@@ -669,29 +669,6 @@ class _ResultScreenState extends State<ResultScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (index == 1) ...[
-                  // Бейдж "Лучший выбор" — делает иерархию явной.
-                  // Золотая рамка карточки + золотой номер — немой сигнал,
-                  // бейдж расшифровывает его словами для пользователя.
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: _card,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: _gold.withOpacity(0.5), width: 1),
-                    ),
-                    child: const Text(
-                      'Лучший выбор',
-                      style: TextStyle(
-                        color: _gold,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                ],
                 Row(
                   children: [
                     Text(result.resolvedEmoji, style: const TextStyle(fontSize: 14)),
@@ -732,21 +709,49 @@ class _ResultScreenState extends State<ResultScreen>
             ),
           ),
           const SizedBox(width: 8),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 110),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(8),
+          // Правый верхний угол карточки: бейдж "Лучший выбор" (только для первой)
+          // + priceRange под ним. Стандарт Booking/Airbnb — бейдж в углу карточки
+          // часть самой карточки, не оторванный элемент сверху.
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (index == 1) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _card,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: _gold.withOpacity(0.5), width: 1),
+                  ),
+                  child: const Text(
+                    'Лучший выбор',
+                    style: TextStyle(
+                      color: _gold,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 110),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    result.priceRange,
+                    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-              child: Text(
-                result.priceRange,
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            ],
           ),
         ],
       ),
@@ -846,10 +851,13 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Widget _buildSaveButton(BuildContext context) {
+    // AnimatedSwitcher на иконке + тексте: при смене _isSaved не перепечатывается
+    // символ за символом (текст "Сохранить"/"Сохранено" отличается на 1 символ —
+    // раньше был jank из-за re-centering). Fade 200мс — Material-паттерн toggle.
     return SizedBox(
       width: double.infinity,
       height: 54,
-      child: ElevatedButton.icon(
+      child: ElevatedButton(
         onPressed: _isSaved ? () {} : () async {
           HapticFeedback.mediumImpact();
           if (_response == null) return;
@@ -873,10 +881,24 @@ class _ResultScreenState extends State<ResultScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
         ),
-        icon: Icon(_isSaved ? Icons.star_rounded : Icons.star_outline_rounded, size: 20),
-        label: Text(
-          _isSaved ? 'Сохранено в избранное' : 'Сохранить в избранное',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: child,
+          ),
+          child: Row(
+            key: ValueKey<bool>(_isSaved),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_isSaved ? Icons.star_rounded : Icons.star_outline_rounded, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                _isSaved ? 'Сохранено в избранное' : 'Сохранить в избранное',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
         ),
       ),
     );
