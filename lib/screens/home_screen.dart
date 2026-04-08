@@ -321,6 +321,10 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _navigating = true);
 
     HapticFeedback.mediumImpact();
+    // Снимаем фокус с TextField перед переходом на Result/Paywall.
+    // Иначе при возврате назад (Navigator.pop) клавиатура всплывает заново
+    // и кнопка "Подобрать" прыгает вверх.
+    FocusScope.of(context).unfocus();
 
     if (mounted) {
       await Navigator.push(
