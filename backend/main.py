@@ -162,6 +162,9 @@ GLOBAL_BRANDS_REFERENCE = """ГЛОБАЛЬНАЯ БАЗА ХОДОВЫХ БРЕ
 
 🍺 ПИВО:
 — Лагер мировой (массово в СНГ): Heineken, Carlsberg, Stella Artois, Corona Extra, Becks, Tuborg, Holsten, Warsteiner, Bitburger, Krombacher, Pilsner Urquell, Budweiser Budvar
+— Азиатский лагер (КЗ/РФ популярные): Asahi, Tsingtao, Sapporo, Kirin
+— Немецкий пшеничный (популярны, Paulaner — ресторанная сеть в СНГ): Paulaner, Erdinger, Weihenstephaner
+— Бельгийский: Hoegaarden, Leffe
 — Стаут/портер: Guinness Draught, Guinness Extra Stout
 — Сидр: Strongbow, Somersby
 
@@ -374,7 +377,7 @@ def _build_prompt(req: PairRequest, is_premium: bool = False) -> str:
 
 🚨 ЖЁСТКОЕ ПРАВИЛО ПЕРВОГО ЭШЕЛОНА (brand):
 Используй ТОЛЬКО массово известные бренды которые физически лежат в сетевых магазинах СНГ (Каспи для Казахстана, Магнит/Перекрёсток/ВкусВилл для РФ, локальные сети для других стран). Целевой пользователь должен УЗНАВАТЬ бренд — это "первый эшелон".
-Пиво (белый список, физически в Каспи/Магнит): Heineken, Corona Extra, Carlsberg, Stella Artois, Tuborg, Becks, Holsten, Krombacher, Bitburger, Warsteiner, Guinness, Pilsner Urquell, Budweiser Budvar.
+Пиво (белый список, физически в Каспи/Магнит/массовых сетях СНГ): Heineken, Corona Extra, Carlsberg, Stella Artois, Tuborg, Becks, Holsten, Krombacher, Bitburger, Warsteiner, Pilsner Urquell, Budweiser Budvar, Paulaner, Erdinger, Weihenstephaner, Hoegaarden, Leffe, Asahi, Tsingtao, Sapporo, Kirin, Guinness.
 Виски: Johnnie Walker, Chivas Regal, Ballantine's, Dewar's, Jameson, Tullamore Dew, Bushmills, Jack Daniel's, Jim Beam, Maker's Mark, Glenfiddich, Glenlivet, Macallan, Glenmorangie.
 Коньяк: Hennessy, Martell, Remy Martin, Courvoisier, Ararat, Noy, Kvint, Metaxa.
 Ром: Bacardi, Havana Club, Captain Morgan, Brugal.
@@ -384,7 +387,7 @@ def _build_prompt(req: PairRequest, is_premium: bool = False) -> str:
 Игристое: Moet & Chandon, Veuve Clicquot, Mumm, Mionetto, Freixenet.
 Вино: Antinori, Mouton Cadet, Marqués de Cáceres, Concha y Toro, Catena, Yellow Tail, Saperavi (Teliani Valley, Tbilvino), Mukuzani, Kindzmarauli.
 
-ЗАПРЕЩЕНО (редкие в СНГ — пользователь не узнает, в Каспи/Магнит их нет): Paulaner, Erdinger, Weihenstephaner, Franziskaner, Schneider Weisse, Maisel's Weisse, Leffe, Hoegaarden, Duvel, Chimay, Westmalle, Kwak, La Chouffe, Köstritzer, Murphy's, Beamish, Brewdog, Lagunitas, Sierra Nevada, Mikkeller, Kopparberg, Lindemans, Magners, Asahi, Tsingtao, Powers, Redbreast, Connemara, Laphroaig, Ardbeg, Talisker, Highland Park, Cardhu, Aberlour, Dalwhinnie, Bowmore, Buffalo Trace, Woodford Reserve, Bulleit, Four Roses, Hibiki, Yamazaki, Hakushu, Suntory Toki, Plantation, Appleton Estate, El Dorado, Diplomatico, Zacapa, Mount Gay XO, Del Maguey, Montelobos, Ilegal, Herradura, Espolon, Cazadores, Casamigos, Monkey 47, The Botanist, Sipsmith, Plymouth, Brockmans, Citadelle, Roku, и любые аналогичные редкие/крафтовые/премиум-нишевые бренды. Если гастрономически идеальный выбор — редкий бренд, БЕРИ МАССОВУЮ АЛЬТЕРНАТИВУ того же стиля из белого списка.
+ЗАПРЕЩЕНО (редкие в СНГ — пользователь не узнает, в Каспи/Магнит их нет): Franziskaner, Schneider Weisse, Maisel's Weisse, Duvel, Chimay, Westmalle, Kwak, La Chouffe, Köstritzer, Murphy's, Beamish, Brewdog, Lagunitas, Sierra Nevada, Mikkeller, Kopparberg, Lindemans, Magners, Powers, Redbreast, Connemara, Laphroaig, Ardbeg, Talisker, Highland Park, Cardhu, Aberlour, Dalwhinnie, Bowmore, Buffalo Trace, Woodford Reserve, Bulleit, Four Roses, Hibiki, Yamazaki, Hakushu, Suntory Toki, Plantation, Appleton Estate, El Dorado, Diplomatico, Zacapa, Mount Gay XO, Del Maguey, Montelobos, Ilegal, Herradura, Espolon, Cazadores, Casamigos, Monkey 47, The Botanist, Sipsmith, Plymouth, Brockmans, Citadelle, Roku, и любые аналогичные редкие/крафтовые/премиум-нишевые бренды. Если гастрономически идеальный выбор — редкий бренд, БЕРИ МАССОВУЮ АЛЬТЕРНАТИВУ того же стиля из белого списка.
 
 ВАЖНО про price_range: ТОЛЬКО короткий диапазон цены, максимум 12 символов. Без скобок, без описаний, без слов "или", "за бутылку", "в баре", "домашнего". Правильно: "$15-20", "~$50", "$80-120". Неправильно: "$15-20 (бутылка)", "$12-18 или $6 домашнего".
 
