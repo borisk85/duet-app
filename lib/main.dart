@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -43,29 +45,59 @@ class PairingApp extends StatelessWidget {
   }
 }
 
-// Слушает authStateChanges — сам переключает между AuthScreen и MainNavigation
-class AuthGate extends StatelessWidget {
+// Слушает authStateChanges и гарантирует минимальное время показа splash'а.
+// Даже если Firebase резолвит auth мгновенно (закешированный токен),
+// splash висит минимум _minSplashMs — пользователь успевает прочитать название
+// и ощутить бренд. Без этого splash мелькает на 100-200мс и никто его не видит.
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  static const _minSplashMs = 1800;
+
+  bool _minElapsed = false;
+  bool _authReady = false;
+  User? _user;
+  StreamSubscription<User?>? _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: _minSplashMs), () {
+      if (mounted) setState(() => _minElapsed = true);
+    });
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (!mounted) return;
+      setState(() {
+        _user = user;
+        _authReady = true;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const _SplashScreen();
-        }
-        if (snapshot.data == null) return const AuthScreen();
-        return const MainNavigation();
-      },
-    );
+    if (!_minElapsed || !_authReady) return const _SplashScreen();
+    if (_user == null) return const AuthScreen();
+    return const MainNavigation();
   }
 }
 
-/// Splash-экран который показывается пока Firebase проверяет auth state.
-/// Заменяет голый CircularProgressIndicator. Содержит логотип "Дуэт" с лёгкой
-/// пульсацией (1.0 ↔ 1.03) и tagline. Совпадает по дизайну с native splash —
-/// переход бесшовный, пользователь не видит ни моргания, ни смены кадра.
+/// Splash-экран который показывается пока Firebase проверяет auth state,
+/// минимум 1800мс (см. AuthGate._minSplashMs) чтобы пользователь успел прочитать
+/// название и ощутить бренд. Содержит логотип "Дуэт" с лёгкой пульсацией
+/// (1.0 ↔ 1.05 — на физическом экране 1.03 глаз не цепляет) и tagline.
+/// Совпадает по дизайну с native splash — переход бесшовный.
 class _SplashScreen extends StatefulWidget {
   const _SplashScreen();
 
@@ -88,8 +120,9 @@ class _SplashScreenState extends State<_SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
-    // Subtle pulse 1.0 → 1.03 (по решению сеньора, не 1.05 — чтобы не было дёшево)
-    _scale = Tween<double>(begin: 1.0, end: 1.03).animate(
+    // Pulse 1.0 → 1.05: на физическом экране 1.03 не цепляет глаз,
+    // 1.05 — граница между "не видно" и "дёшево", правильная для реального устройства.
+    _scale = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
     );
   }
