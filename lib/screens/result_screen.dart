@@ -105,10 +105,20 @@ class _ResultScreenState extends State<ResultScreen>
 
       var raw = buffer.toString().trim();
 
-      // Убираем markdown-обёртку ДО парсинга — Claude иногда оборачивает JSON в ```json
+      // Убираем markdown-обёртку ДО парсинга — Claude иногда оборачивает JSON в ```json.
+      // Защита от RangeError: lastIndexOf возвращает -1 если закрывающих ``` нет
+      // (Claude обрезан по max_tokens или просто не поставил закрытие), и тогда
+      // substring(0, -1) падал с RangeError Invalid value 0..N: -1.
       if (raw.startsWith('```')) {
-        raw = raw.split('\n').skip(1).join('\n');
-        raw = raw.substring(0, raw.lastIndexOf('```')).trim();
+        final firstNewline = raw.indexOf('\n');
+        if (firstNewline != -1) {
+          raw = raw.substring(firstNewline + 1);
+        }
+        final closingTicks = raw.lastIndexOf('```');
+        if (closingTicks != -1) {
+          raw = raw.substring(0, closingTicks);
+        }
+        raw = raw.trim();
       }
 
       // Парсим JSON. Если Claude вернул свободный текст (невалидный запрос,
