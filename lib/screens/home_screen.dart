@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../main.dart' show initialBudgetKey;
 import 'result_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,7 +14,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _controller = TextEditingController();
   bool _isFoodToAlcohol = true;
-  int _budgetIndex = 1; // 0 = Бюджетно, 1 = Средний, 2 = Премиум
+  // Инициализируем синхронно из top-level initialBudgetKey (прогружено в main()
+  // до runApp) — без мелькания с дефолта "Средний" на сохранённое значение.
+  late int _budgetIndex = _initialBudgetIndex();
   bool _navigating = false;
 
   static const _budgetLabels = ['Бюджетно', 'Средний', 'Премиум'];
@@ -24,19 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _bg = Color(0xFF0D0D0D);
   static const _card = Color(0xFF1A1A1A);
 
-  @override
-  void initState() {
-    super.initState();
-    _loadBudget();
-  }
-
-  Future<void> _loadBudget() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString('budget') ?? 'medium';
-    final idx = _budgetKeys.indexOf(saved);
-    if (idx != -1 && mounted) {
-      setState(() => _budgetIndex = idx);
-    }
+  int _initialBudgetIndex() {
+    final idx = _budgetKeys.indexOf(initialBudgetKey);
+    return idx == -1 ? 1 : idx;
   }
 
   Future<void> _saveBudget(int idx) async {

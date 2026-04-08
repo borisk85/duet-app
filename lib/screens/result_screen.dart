@@ -101,19 +101,27 @@ class _ResultScreenState extends State<ResultScreen>
 
       var raw = buffer.toString().trim();
 
-      // Проверяем ошибку от сервера
-      if (raw.startsWith('{"error"')) {
-        final err = jsonDecode(raw);
-        throw Exception(err['error'] ?? 'Ошибка сервера');
-      }
-
-      // Убираем markdown-обёртку
+      // Убираем markdown-обёртку ДО парсинга — Claude иногда оборачивает JSON в ```json
       if (raw.startsWith('```')) {
         raw = raw.split('\n').skip(1).join('\n');
         raw = raw.substring(0, raw.lastIndexOf('```')).trim();
       }
 
-      final data = jsonDecode(raw);
+      // Парсим JSON. Если Claude вернул свободный текст (невалидный запрос,
+      // где модель проигнорировала инструкцию про error-JSON) — ловим
+      // FormatException и показываем понятное сообщение вместо техническое.
+      final dynamic data;
+      try {
+        data = jsonDecode(raw);
+      } on FormatException {
+        throw Exception('Не удалось распознать блюдо. Попробуйте уточнить название или выбрать другое.');
+      }
+
+      // Claude вернул поле error — невалидный запрос (корм для животных,
+      // бессмыслица, оскорбления). Показываем текст error как user message.
+      if (data is Map && data['error'] != null) {
+        throw Exception(data['error'].toString());
+      }
       final prefs = await SharedPreferences.getInstance();
       final region = prefs.getString('region') ?? 'СНГ';
 
@@ -573,7 +581,10 @@ class _ResultScreenState extends State<ResultScreen>
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         children: [
-          Icon(Icons.wifi_off_rounded, color: Colors.white.withOpacity(0.3), size: 48),
+          // Нейтральная info-иконка вместо wifi_off — ошибка может быть и
+          // не сетевой (невалидный запрос, ошибка парсинга, лимит и т.д.).
+          // Wi-Fi иконка вводила в заблуждение про "нет интернета".
+          Icon(Icons.info_outline_rounded, color: Colors.white.withOpacity(0.3), size: 48),
           const SizedBox(height: 16),
           Text(
             _error ?? 'Что-то пошло не так',

@@ -4,12 +4,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/profile_screen.dart';
+
+/// Последний сохранённый бюджет — загружается ДО runApp чтобы HomeScreen
+/// инициализировался синхронно. Раньше HomeScreen стартовал с дефолтом
+/// "Средний", потом async-load из SharedPreferences делал setState на
+/// реальное значение — пользователь видел мелькание селектора бюджета.
+late String initialBudgetKey;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +29,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  final prefs = await SharedPreferences.getInstance();
+  initialBudgetKey = prefs.getString('budget') ?? 'medium';
   runApp(const PairingApp());
 }
 
