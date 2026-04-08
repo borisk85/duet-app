@@ -79,15 +79,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final overlay = Overlay.of(context);
 
     // Overlay вставляется в root Overlay.of(context) — positioning идёт
-    // от физического низа экрана, не от body. bottom nav bar 60px + gesture
-    // bar ~24-34px + зазор = ~100. MediaQuery.padding.bottom внутри body
-    // FavoritesScreen возвращает 0 (body уже под SafeArea родителя), так
-    // что хардкод надёжнее — гарантированно выше навбара на всех устройствах.
+    // от физического низа экрана, не от body. bottom: 100 Boris не хватало
+    // на Xiaomi — краями overlay залезал на навбар. Поднято до 130:
+    // 60 (navbar) + 40 (gesture bar + буфер) + 30 (явный зазор чтобы не
+    // касаться верхнего края меню). На устройствах без gesture bar выглядит
+    // чуть выше чем нужно, но это лучше чем перекрытие.
     final entry = OverlayEntry(
       builder: (ctx) => Positioned(
         left: 20,
         right: 20,
-        bottom: 100,
+        bottom: 130,
         child: Material(
           color: Colors.transparent,
           child: Container(
