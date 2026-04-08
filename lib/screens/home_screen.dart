@@ -311,6 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
         ),
       );
       return;

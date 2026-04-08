@@ -49,6 +49,10 @@ class _ResultScreenState extends State<ResultScreen>
   bool _isLoading = true;
   bool _isSaved = false;
   bool _isSavedChecked = false;
+  // Для sequential fade кнопки "Сохранить → Сохранено": сначала _fadingOut=true
+  // делает opacity 0, потом меняем _isSaved=true и opacity обратно в 1.
+  // AnimatedSwitcher cross-fade давал эффект перепечатки концовки.
+  bool _fadingOut = false;
   bool _isSharing = false;
   String? _error;
 
@@ -427,6 +431,7 @@ class _ResultScreenState extends State<ResultScreen>
             backgroundColor: Colors.red.shade800,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
           ),
         );
       }
@@ -878,9 +883,12 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Widget _buildSaveButton(BuildContext context) {
-    // AnimatedSwitcher на иконке + тексте: при смене _isSaved не перепечатывается
-    // символ за символом (текст "Сохранить"/"Сохранено" отличается на 1 символ —
-    // раньше был jank из-за re-centering). Fade 200мс — Material-паттерн toggle.
+    // Sequential fade через явный state machine + AnimatedOpacity.
+    // Почему не AnimatedSwitcher: даже с Interval(0.5,1.0) cross-fade держал
+    // оба текста в дереве одновременно — буквы "ть"/"но" накладывались и было
+    // видно перепечатку концовки. Здесь: opacity 1→0 за 160мс (старый исчез),
+    // потом setState меняет текст в полной невидимости, потом opacity 0→1
+    // за 160мс (новый появляется). Ни одного кадра с обоими текстами.
     return SizedBox(
       width: double.infinity,
       height: 54,
@@ -890,7 +898,14 @@ class _ResultScreenState extends State<ResultScreen>
           if (_response == null) return;
           try {
             await ApiService.saveFavorite(_response!);
-            if (mounted) setState(() => _isSaved = true);
+            if (!mounted) return;
+            setState(() => _fadingOut = true);
+            await Future.delayed(const Duration(milliseconds: 160));
+            if (!mounted) return;
+            setState(() {
+              _isSaved = true;
+              _fadingOut = false;
+            });
           } catch (e) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -898,6 +913,7 @@ class _ResultScreenState extends State<ResultScreen>
                 backgroundColor: Colors.red.shade800,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
               ));
             }
           }
@@ -908,20 +924,11 @@ class _ResultScreenState extends State<ResultScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
         ),
-        // Sequential fade: старый текст полностью исчезает в первой половине
-        // анимации, новый появляется во второй. Без этого cross-fade показывал
-        // одновременно "Сохранить" и "Сохранено" — буквы "ть" и "но" в конце
-        // накладывались → выглядело как посимвольная перепечатка.
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 320),
-          switchInCurve: const Interval(0.5, 1.0, curve: Curves.easeIn),
-          switchOutCurve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
+        child: AnimatedOpacity(
+          opacity: _fadingOut ? 0.0 : 1.0,
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeInOut,
           child: Row(
-            key: ValueKey<bool>(_isSaved),
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(_isSaved ? Icons.star_rounded : Icons.star_outline_rounded, size: 20),
