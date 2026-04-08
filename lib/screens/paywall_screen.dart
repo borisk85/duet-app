@@ -45,11 +45,11 @@ class PaywallScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              // Нижний padding 40 (не 24) чтобы TextButton "Может быть позже"
-              // не попадал в system gesture exclusion zone Android. На Xiaomi
-              // с жестовой навигацией нижние ~24-40dp перехватываются системой,
-              // кнопка срабатывала только с 4-5 попытки.
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+              // Нижний padding 60 — Xiaomi MIUI gesture exclusion zone у Boris
+              // больше 40dp (с 40 кнопка "Может быть позже" вообще не тапалась).
+              // 60 гарантированно поднимает TextButton выше любой системной
+              // жестовой зоны на любом Android launcher.
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 60),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -134,7 +134,6 @@ class PaywallScreen extends StatelessWidget {
                         _buildBenefit('Безлимитное избранное'),
                         _buildBenefit('История подборок 30 дней (вместо 7)'),
                         _buildBenefit('Экспертный режим с глубоким описанием'),
-                        _buildBenefit('Приоритетная поддержка'),
                       ],
                     ),
                   ),
@@ -154,6 +153,7 @@ class PaywallScreen extends StatelessWidget {
                                 fontSize: 36,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: -0.5,
+                                height: 1.0,
                               ),
                             ),
                             Padding(
@@ -169,12 +169,12 @@ class PaywallScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
                         Text(
-                          'Меньше 1\$ в месяц',
+                          'Меньше \$1 в месяц',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.4),
                             fontSize: 13,
+                            height: 1.2,
                           ),
                         ),
                       ],
