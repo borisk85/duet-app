@@ -69,6 +69,7 @@ class PairingResponse {
   final String mode;
   final String budget;
   final String region;
+  final String detailLevel; // simple / standard / expert
   final List<PairingResult> results;
   final DateTime createdAt;
 
@@ -78,6 +79,7 @@ class PairingResponse {
     required this.mode,
     required this.budget,
     this.region = 'СНГ',
+    this.detailLevel = 'standard',
     required this.results,
     required this.createdAt,
   });
@@ -89,6 +91,7 @@ class PairingResponse {
       mode: json['mode'] ?? 'food_to_alcohol',
       budget: json['budget'] ?? 'medium',
       region: json['region'] ?? 'СНГ',
+      detailLevel: json['detail_level'] ?? 'standard',
       results: (json['results'] as List<dynamic>? ?? [])
           .map((r) => PairingResult.fromJson(r))
           .toList(),
@@ -101,6 +104,7 @@ class PairingResponse {
     'mode': mode,
     'budget': budget,
     'region': region,
+    'detail_level': detailLevel,
     'results': results.map((r) => r.toJson()).toList(),
     'created_at': createdAt.toIso8601String(),
   };

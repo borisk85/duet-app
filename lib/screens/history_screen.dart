@@ -172,8 +172,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
+  String _detailLabel(String level) {
+    switch (level) {
+      case 'simple':
+        return 'Просто';
+      case 'expert':
+        return 'Эксперт';
+      case 'standard':
+      default:
+        return 'Стандарт';
+    }
+  }
+
   Widget _buildCard(PairingResponse item) {
     final firstResult = item.results.isNotEmpty ? item.results.first : null;
+    final detailLabel = _detailLabel(item.detailLevel);
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -205,8 +218,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 3),
+                  // Подзаголовок: тип · бренд · режим детализации.
+                  // Режим добавлен чтобы три записи "стейк рибай" в Просто/
+                  // Стандарт/Эксперт визуально отличались — иначе история
+                  // выглядит как дублирование одного запроса.
                   Text(
-                    firstResult != null ? '${firstResult.alcoholType} · ${firstResult.brand}' : '',
+                    firstResult != null
+                        ? '${firstResult.alcoholType} · ${firstResult.brand} · $detailLabel'
+                        : detailLabel,
                     style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

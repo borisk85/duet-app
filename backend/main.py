@@ -483,8 +483,8 @@ async def pair_stream(request: Request, req: PairRequest):
                 with c.cursor() as cur:
                     cur.execute("UPDATE users SET pairing_count = pairing_count + 1 WHERE firebase_uid = %s", (uid,))
                     cur.execute(
-                        "INSERT INTO pairings (firebase_uid, dish, mode, budget, region, results) VALUES (%s,%s,%s,%s,%s,%s)",
-                        (uid, req.dish, req.mode, req.budget, req.region, json.dumps(cached["results"]))
+                        "INSERT INTO pairings (firebase_uid, dish, mode, budget, region, results, detail_level) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                        (uid, req.dish, req.mode, req.budget, req.region, json.dumps(cached["results"]), req.detail_level)
                     )
                 c.commit()
             finally:
@@ -551,8 +551,8 @@ async def pair_stream(request: Request, req: PairRequest):
                     with c.cursor() as cur:
                         cur.execute("UPDATE users SET pairing_count = pairing_count + 1 WHERE firebase_uid = %s", (uid,))
                         cur.execute(
-                            "INSERT INTO pairings (firebase_uid, dish, mode, budget, region, results) VALUES (%s,%s,%s,%s,%s,%s)",
-                            (uid, req.dish, req.mode, req.budget, req.region, json.dumps(results))
+                            "INSERT INTO pairings (firebase_uid, dish, mode, budget, region, results, detail_level) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                            (uid, req.dish, req.mode, req.budget, req.region, json.dumps(results), req.detail_level)
                         )
                     c.commit()
                 finally:
@@ -573,7 +573,7 @@ def get_history(request: Request):
         days = 30 if user["is_premium"] else 7
         with conn.cursor() as cur:
             cur.execute(
-                """SELECT dish, mode, budget, region, results, created_at
+                """SELECT dish, mode, budget, region, results, created_at, detail_level
                    FROM pairings WHERE firebase_uid = %s AND created_at > NOW() - INTERVAL '%s days'
                    ORDER BY created_at DESC LIMIT 50""",
                 (user_info["uid"], days)
