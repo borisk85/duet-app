@@ -224,7 +224,11 @@ class PaywallScreen extends StatelessWidget {
             Positioned(
               left: 0,
               right: 0,
-              bottom: 60,
+              // bottom: 40 — опущена ниже от primary CTA для воздуха.
+              // С GestureDetector hit area работает и в gesture exclusion zone
+              // потому что Positioned развязан от Column flow и явный
+              // HitTestBehavior.opaque гарантирует обработку тапов.
+              bottom: 40,
               child: Center(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
