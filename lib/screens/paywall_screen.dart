@@ -50,9 +50,9 @@ class PaywallScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              // Нижний padding 100 — гарантированно выше Xiaomi MIUI gesture
-              // exclusion zone (она может быть до ~80dp на новых MIUI).
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 100),
+              // Нижний padding 160 — резервирует место под "Может быть позже"
+              // которая теперь рендерится в отдельном Positioned внизу stack'а.
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 160),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -210,11 +210,29 @@ class PaywallScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Зазор между primary CTA и secondary action.
-                  const SizedBox(height: 12),
-                  // Кнопка закрыть (вторичная).
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                ],
+              ),
+            ),
+            // "Может быть позже" — отдельный Positioned внизу Stack.
+            // Раньше TextButton в Column всё время не тапался на Xiaomi
+            // несмотря на padding 60/80/100. Решение: вынести из Column
+            // полностью и поставить как Positioned с фиксированным bottom 60.
+            // Это полностью развязывает hit area от gesture zone и Column flow.
+            // GestureDetector + HitTestBehavior.opaque гарантирует что весь
+            // прямоугольник 220x48 ловит тапы (TextButton по умолчанию ловит
+            // только сам текст).
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 60,
+              child: Center(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 240,
+                    height: 48,
+                    alignment: Alignment.center,
                     child: Text(
                       'Может быть позже',
                       style: TextStyle(
@@ -224,12 +242,7 @@ class PaywallScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Дополнительный буфер ПОД "Может быть позже" — поднимает
-                  // кликабельную область ещё выше от низа экрана. Padding 100
-                  // на родителе + этот SizedBox 24 = TextButton физически
-                  // в ~140dp от низа, гарантированно выше gesture zone.
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
             ),
           ],
