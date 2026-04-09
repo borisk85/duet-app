@@ -201,6 +201,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               firstResult?.resolvedEmoji ?? '🍷',
@@ -218,14 +219,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 3),
-                  // Подзаголовок: тип · бренд · режим детализации.
-                  // Режим добавлен чтобы три записи "стейк рибай" в Просто/
-                  // Стандарт/Эксперт визуально отличались — иначе история
-                  // выглядит как дублирование одного запроса.
                   Text(
-                    firstResult != null
-                        ? '${firstResult.alcoholType} · ${firstResult.brand} · $detailLabel'
-                        : detailLabel,
+                    firstResult != null ? '${firstResult.alcoholType} · ${firstResult.brand}' : '',
                     style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -233,18 +228,45 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: item.mode == 'food_to_alcohol'
-                    ? _gold.withOpacity(0.12)
-                    : Colors.blue.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                item.mode == 'food_to_alcohol' ? '🍽️→🥂' : '🥂→🍽️',
-                style: const TextStyle(fontSize: 11),
-              ),
+            const SizedBox(width: 8),
+            // Правый блок: бейдж режима детализации (тот же стиль что
+            // "Лучший выбор" на result_screen — золотой текст на тёмном
+            // фоне с золотой обводкой) + бейдж направления подборки.
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: _bg,
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: _gold.withOpacity(0.5), width: 1),
+                  ),
+                  child: Text(
+                    detailLabel,
+                    style: const TextStyle(
+                      color: _gold,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: item.mode == 'food_to_alcohol'
+                        ? _gold.withOpacity(0.12)
+                        : Colors.blue.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    item.mode == 'food_to_alcohol' ? '🍽️→🥂' : '🥂→🍽️',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
