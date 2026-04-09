@@ -187,7 +187,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // Слайд 1 — что это
+  // Слайд 1 — Hero. Cal AI стандарт: иконка + 1 жирная строка + 1 тонкая.
+  // Никаких объяснений как работает приложение.
   Widget _buildSlide1() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -195,35 +196,35 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 140,
-            height: 140,
+            width: 160,
+            height: 160,
             decoration: BoxDecoration(
               color: _gold.withOpacity(0.10),
               shape: BoxShape.circle,
               border: Border.all(color: _gold.withOpacity(0.4), width: 2),
             ),
             child: const Center(
-              child: Text('🥂', style: TextStyle(fontSize: 64)),
+              child: Text('🥂', style: TextStyle(fontSize: 80)),
             ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 48),
           const Text(
-            'Подберём напиток к любому блюду',
+            'Идеальный напиток\nк каждому блюду',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
               letterSpacing: 0.3,
-              height: 1.3,
+              height: 1.25,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
-            'Введите блюдо — получите идеальное сочетание за секунды.',
+            'AI-эксперт. Подбираем за секунды.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.65),
+              color: Colors.white.withOpacity(0.55),
               fontSize: 15,
               height: 1.5,
             ),
@@ -233,105 +234,52 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // Слайд 2 — как работает
+  // Слайд 2 — Регион. Один вопрос, чипсы, кнопка Далее.
+  // Cal AI паттерн: каждый слайд = одно действие.
   Widget _buildSlide2() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              color: _gold.withOpacity(0.10),
+              shape: BoxShape.circle,
+              border: Border.all(color: _gold.withOpacity(0.4), width: 2),
+            ),
+            child: const Center(
+              child: Text('🌍', style: TextStyle(fontSize: 44)),
+            ),
+          ),
+          const SizedBox(height: 32),
           const Text(
-            'Как это работает',
+            'Откуда вы?',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
               letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: 36),
-          _buildStep('1', '🍽️', 'Введите блюдо или напиток'),
-          const SizedBox(height: 18),
-          _buildStep('2', '✨', 'AI подбирает тройку лучших вариантов'),
-          const SizedBox(height: 18),
-          _buildStep('3', '⭐', 'Сохраняйте и делитесь'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep(String num, String emoji, String text) {
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: _gold.withOpacity(0.12),
-            shape: BoxShape.circle,
-            border: Border.all(color: _gold.withOpacity(0.4), width: 1.5),
-          ),
-          child: Center(child: Text(emoji, style: const TextStyle(fontSize: 20))),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Слайд 3 — персонализация прямо здесь
-  Widget _buildSlide3() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Настройте под себя',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              'Первая подборка уже будет персональной',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.55),
-                fontSize: 13,
-              ),
-            ),
-          ),
-          const SizedBox(height: 28),
-          Text(
-            'РЕГИОН',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
             ),
           ),
           const SizedBox(height: 10),
+          Text(
+            'Чтобы предлагать доступные бренды',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.55),
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 32),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 10,
+            runSpacing: 10,
+            alignment: WrapAlignment.center,
             children: _regions.map((r) {
               final selected = _region == r;
               return GestureDetector(
@@ -340,10 +288,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   setState(() => _region = r);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   decoration: BoxDecoration(
                     color: selected ? _gold.withOpacity(0.15) : _card,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: selected ? _gold : Colors.white.withOpacity(0.08),
                       width: selected ? 1.5 : 1,
@@ -352,49 +300,61 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   child: Text(
                     r,
                     style: TextStyle(
-                      color: selected ? _gold : Colors.white.withOpacity(0.75),
-                      fontSize: 13,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                      color: selected ? _gold : Colors.white.withOpacity(0.85),
+                      fontSize: 15,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
+        ],
+      ),
+    );
+  }
+
+  // Слайд 3 — Предпочтения. Опционально, без давления.
+  Widget _buildSlide3() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              color: _gold.withOpacity(0.10),
+              shape: BoxShape.circle,
+              border: Border.all(color: _gold.withOpacity(0.4), width: 2),
+            ),
+            child: const Center(
+              child: Text('🍷', style: TextStyle(fontSize: 44)),
+            ),
+          ),
           const SizedBox(height: 28),
-          Row(
-            children: [
-              Text(
-                'ЧТО ЛЮБИТЕ ПИТЬ?',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '(необязательно)',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.3),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_preferredTypes.length} / 3',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          const Text(
+            'Что любите пить?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
           ),
           const SizedBox(height: 10),
+          Text(
+            'Необязательно. До 3 категорий',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.55),
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 24),
           AnimatedBuilder(
             animation: _shakeAnimation,
             builder: (_, child) => Transform.translate(
@@ -404,16 +364,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
+              alignment: WrapAlignment.center,
               children: _alcoholTypes.map((t) {
                 final key = t['key']!;
                 final selected = _preferredTypes.contains(key);
                 return GestureDetector(
                   onTap: () => _togglePreference(key),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
                     decoration: BoxDecoration(
                       color: selected ? _gold.withOpacity(0.15) : _card,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(11),
                       border: Border.all(
                         color: selected ? _gold : Colors.white.withOpacity(0.08),
                         width: selected ? 1.5 : 1,
@@ -427,9 +388,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         Text(
                           t['label']!,
                           style: TextStyle(
-                            color: selected ? _gold : Colors.white.withOpacity(0.75),
+                            color: selected ? _gold : Colors.white.withOpacity(0.85),
                             fontSize: 13,
-                            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                           ),
                         ),
                       ],
