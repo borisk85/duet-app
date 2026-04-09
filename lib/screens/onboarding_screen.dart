@@ -365,7 +365,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           Row(
             children: [
               Text(
-                'ПРЕДПОЧТЕНИЯ',
+                'ЧТО ЛЮБИТЕ ПИТЬ?',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.4),
                   fontSize: 11,
@@ -374,6 +374,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
               ),
               const SizedBox(width: 8),
+              Text(
+                '(необязательно)',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.3),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const Spacer(),
               Text(
                 '${_preferredTypes.length} / 3',
                 style: TextStyle(
