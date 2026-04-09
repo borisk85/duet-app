@@ -353,13 +353,16 @@ class _ProfileScreenState extends State<ProfileScreen>
             onTap: () {
               HapticFeedback.lightImpact();
               if (locked) {
-                // Free тапает Expert — открываем Paywall с контекстом.
-                // dish='Эксперт-режим' персонализирует paywall под фичу.
+                // Free тапает Expert — открываем Paywall в режиме блокировки
+                // фичи (feature: ...). Это переключает заголовок и текст
+                // на грамматически корректный вариант "«Экспертный режим»
+                // доступен только в Premium..." вместо хака с dish.
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const PaywallScreen(
-                      dish: 'Экспертный режим',
+                      dish: '',
                       mode: 'food_to_alcohol',
+                      feature: 'Экспертный режим',
                     ),
                   ),
                 );

@@ -13,13 +13,25 @@ import 'package:flutter/services.dart';
 /// Пока RevenueCat не подключён, кнопка "Перейти на Premium" даёт только haptic.
 /// После интеграции RevenueCat — открывает purchase flow.
 class PaywallScreen extends StatelessWidget {
-  /// То что пользователь хотел подобрать (блюдо или напиток) — для персонализации
+  /// То что пользователь хотел подобрать (блюдо или напиток) — для персонализации.
+  /// Используется только если feature == null (контекст обычной подборки).
   final String dish;
 
-  /// Режим в котором случилась блокировка ('food_to_alcohol' или 'alcohol_to_food')
+  /// Режим в котором случилась блокировка ('food_to_alcohol' или 'alcohol_to_food').
+  /// Используется только если feature == null.
   final String mode;
 
-  const PaywallScreen({super.key, required this.dish, required this.mode});
+  /// Альтернативный контекст: блокировка фичи Premium (Expert mode, 5 категорий и т.д.)
+  /// Когда задан — заголовок и описание переключаются на feature-paywall,
+  /// dish/mode игнорируются. Грамматически корректно для любой Premium-фичи.
+  final String? feature;
+
+  const PaywallScreen({
+    super.key,
+    required this.dish,
+    required this.mode,
+    this.feature,
+  });
 
   static const _gold = Color(0xFFC9A84C);
   // Более яркий золотой ТОЛЬКО для primary CTA "Перейти на Premium".
@@ -34,6 +46,7 @@ class PaywallScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFood = mode == 'food_to_alcohol';
+    final isFeature = feature != null;
 
     return Scaffold(
       backgroundColor: _bg,
@@ -73,11 +86,11 @@ class PaywallScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 28),
-                  // Заголовок
-                  const Text(
-                    'Бесплатный лимит исчерпан',
+                  // Заголовок: разный для лимита подборок и блокировки фичи.
+                  Text(
+                    isFeature ? 'Только для Premium' : 'Бесплатный лимит исчерпан',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.w700,
@@ -85,26 +98,45 @@ class PaywallScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  // Персонализированный текст с блюдом
+                  // Персонализированный текст: разный для двух контекстов.
+                  // 1) Лимит подборок: "Вы хотели подобрать напиток к «блюду»..."
+                  // 2) Блокировка фичи: "«Экспертный режим» доступен только..."
                   RichText(
                     textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.65),
-                        fontSize: 15,
-                        height: 1.5,
-                      ),
-                      children: [
-                        TextSpan(text: isFood ? 'Вы хотели подобрать напиток к ' : 'Вы хотели подобрать блюда к '),
-                        TextSpan(
-                          text: '«$dish»',
-                          style: const TextStyle(color: _goldText, fontWeight: FontWeight.w600),
-                        ),
-                        const TextSpan(
-                          text: ' — оформите Premium и получите результат прямо сейчас.',
-                        ),
-                      ],
-                    ),
+                    text: isFeature
+                        ? TextSpan(
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.65),
+                              fontSize: 15,
+                              height: 1.5,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: '«${feature!}»',
+                                style: const TextStyle(color: _goldText, fontWeight: FontWeight.w600),
+                              ),
+                              const TextSpan(
+                                text: ' доступен только в Premium. Оформите подписку и получите доступ ко всем возможностям.',
+                              ),
+                            ],
+                          )
+                        : TextSpan(
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.65),
+                              fontSize: 15,
+                              height: 1.5,
+                            ),
+                            children: [
+                              TextSpan(text: isFood ? 'Вы хотели подобрать напиток к ' : 'Вы хотели подобрать блюда к '),
+                              TextSpan(
+                                text: '«$dish»',
+                                style: const TextStyle(color: _goldText, fontWeight: FontWeight.w600),
+                              ),
+                              const TextSpan(
+                                text: ' — оформите Premium и получите результат прямо сейчас.',
+                              ),
+                            ],
+                          ),
                   ),
                   const SizedBox(height: 32),
                   // Карточка преимуществ
