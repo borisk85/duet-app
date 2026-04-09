@@ -628,6 +628,12 @@ async def pair_stream(request: Request, req: PairRequest):
                     key = at.strip().lower()
                     if key in EN_TO_RU_CATEGORY:
                         r["alcohol_type"] = EN_TO_RU_CATEGORY[key]
+                    elif any(c.isascii() and c.isalpha() for c in at):
+                        # Англ категория не нашлась в словаре — логируем для
+                        # мониторинга. Раз в неделю смотрим Railway logs и
+                        # добавляем новые варианты в EN_TO_RU_CATEGORY.
+                        # Префикс [UNKNOWN_CATEGORY] для grep по логам.
+                        print(f'[UNKNOWN_CATEGORY: "{at}"] dish={req.dish!r} mode={req.mode}', flush=True)
             # Гарантия что why_it_works существует ТОЛЬКО в Эксперт-режиме.
             # Если Claude вернул его в Просто/Стандарт — вырезаем перед сохранением.
             if req.detail_level != "expert":
