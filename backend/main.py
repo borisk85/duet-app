@@ -33,8 +33,10 @@ def _init_firebase():
 
 # ── Персистентный кеш в PostgreSQL ────────────────────────────────────────────
 # Был in-memory dict, но он сбрасывался при каждом redeploy Railway.
-# Теперь хранится в pairing_cache. TTL 24 часа, probabilistic cleanup при INSERT.
-CACHE_TTL_HOURS = 24
+# Теперь хранится в pairing_cache. TTL 30 дней — гастрономические пары
+# не устаревают через сутки (стейк+вино работает месяцами), это даёт
+# максимальную экономию на Claude API. Probabilistic cleanup при INSERT.
+CACHE_TTL_HOURS = 24 * 30  # 30 дней
 CLEANUP_PROBABILITY = 0.05  # 5% шанс DELETE старых записей при каждом _cache_set
 
 def _cache_get(key: str) -> dict | None:
