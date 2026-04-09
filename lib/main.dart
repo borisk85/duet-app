@@ -10,6 +10,7 @@ import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/profile_screen.dart';
 
 /// Последний сохранённый бюджет — загружается ДО runApp чтобы HomeScreen
@@ -17,6 +18,11 @@ import 'screens/profile_screen.dart';
 /// "Средний", потом async-load из SharedPreferences делал setState на
 /// реальное значение — пользователь видел мелькание селектора бюджета.
 late String initialBudgetKey;
+
+/// Флаг прохождения онбординга — загружен до runApp чтобы AuthGate сразу
+/// решил показывать ли OnboardingScreen или сразу AuthScreen / MainNavigation.
+/// Без этого онбординг бы мелькал у пользователей которые его уже прошли.
+late bool initialOnboardingDone;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +37,7 @@ void main() async {
   );
   final prefs = await SharedPreferences.getInstance();
   initialBudgetKey = prefs.getString('budget') ?? 'medium';
+  initialOnboardingDone = prefs.getBool('onboarding_done') ?? false;
   runApp(const PairingApp());
 }
 
@@ -70,6 +77,9 @@ class _AuthGateState extends State<AuthGate> {
 
   bool _minElapsed = false;
   bool _authReady = false;
+  // Локальная копия флага онбординга — после _finish() в OnboardingScreen
+  // ставим в true и AuthGate ребилдится без рестарта приложения.
+  bool _onboardingDone = initialOnboardingDone;
   User? _user;
   StreamSubscription<User?>? _authSub;
 
@@ -97,6 +107,14 @@ class _AuthGateState extends State<AuthGate> {
   @override
   Widget build(BuildContext context) {
     if (!_minElapsed || !_authReady) return const _SplashScreen();
+    // Онбординг показывается ПОСЛЕ splash и ДО auth — пользователь сначала
+    // понимает что это за приложение, потом логинится. Если пропустил или
+    // уже проходил — сразу к auth/main.
+    if (!_onboardingDone) {
+      return OnboardingScreen(
+        onDone: () => setState(() => _onboardingDone = true),
+      );
+    }
     if (_user == null) return const AuthScreen();
     return const MainNavigation();
   }
