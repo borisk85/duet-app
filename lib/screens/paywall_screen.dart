@@ -22,6 +22,11 @@ class PaywallScreen extends StatelessWidget {
   const PaywallScreen({super.key, required this.dish, required this.mode});
 
   static const _gold = Color(0xFFC9A84C);
+  // Более яркий золотой ТОЛЬКО для primary CTA "Перейти на Premium".
+  // Основной _gold (#C9A84C) на тёмном фоне выглядит бежевым — для главного
+  // акцента нужен насыщеннее. #E8B547 — на ~15% ярче, всё ещё в палитре,
+  // не вульгарный жёлтый.
+  static const _goldCta = Color(0xFFE8B547);
   static const _goldText = Color(0xFFD4B563);
   static const _bg = Color(0xFF0D0D0D);
   static const _card = Color(0xFF1A1A1A);
@@ -181,35 +186,45 @@ class PaywallScreen extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
+                  // Цена должна "дышать" — пользователь успевает осознать
+                  // $9.99 как дёшево прежде чем увидеть CTA-кнопку.
+                  const SizedBox(height: 20),
                   // Кнопка покупки (только haptic — RevenueCat не интегрирован).
-                  // Раньше был SnackBar "Premium скоро будет доступен", но он
-                  // противоречил кнопке "Перейти на Premium" и путал пользователя.
+                  // backgroundColor _goldCta (#E8B547) ярче основного _gold —
+                  // на тёмном фоне основной _gold выглядел бежевым, а CTA
+                  // должен быть насыщенным акцентом.
                   SizedBox(
                     width: double.infinity,
-                    height: 54,
+                    height: 56,
                     child: ElevatedButton(
                       onPressed: () => HapticFeedback.mediumImpact(),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _gold,
+                        backgroundColor: _goldCta,
                         foregroundColor: _bg,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         elevation: 0,
                       ),
                       child: const Text(
                         'Перейти на Premium',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: 0.3),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  // Кнопка закрыть (вторичная)
+                  // Зазор между primary CTA и secondary action — чтобы
+                  // "Может быть позже" не сливалась с золотой кнопкой.
+                  const SizedBox(height: 16),
+                  // Кнопка закрыть (вторичная) — увеличена с 14→15px и
+                  // стала более читаемой, не теряется внизу экрана.
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                     child: Text(
                       'Может быть позже',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.55),
+                        fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
