@@ -245,11 +245,13 @@ class _ResultScreenState extends State<ResultScreen>
 
   /// Виджет для share — первая карточка + футер "Дуэт".
   /// Рендерится offscreen, в скриншот идёт ровно эта композиция.
+  /// Width 480 (а не 380) — больше места под expert-reason, который длиннее
+  /// чем simple/standard. Reason без maxLines чтобы не обрезался ellipsis'ом.
   Widget _buildShareableCard(PairingResult result) {
     return RepaintBoundary(
       key: _shareCardKey,
       child: Container(
-        width: 380,
+        width: 480,
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(color: _bg),
         child: Column(
@@ -329,7 +331,9 @@ class _ResultScreenState extends State<ResultScreen>
                       fontSize: 13,
                       height: 1.5,
                     ),
-                    maxLines: 6,
+                    // Без maxLines — текст должен помещаться целиком,
+                    // expert reason длиннее simple/standard. Карточка
+                    // вертикально растягивается под содержимое.
                   ),
                 ],
               ),
