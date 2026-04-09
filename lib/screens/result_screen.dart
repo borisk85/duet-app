@@ -105,7 +105,7 @@ class _ResultScreenState extends State<ResultScreen>
 
       var raw = buffer.toString().trim();
 
-      // Убираем markdown-обёртку ДО парсинга — Claude иногда оборачивает JSON в ```json.
+      // Убираем markdown-обертку ДО парсинга — Claude иногда оборачивает JSON в ```json.
       // Защита от RangeError: lastIndexOf возвращает -1 если закрывающих ``` нет
       // (Claude обрезан по max_tokens или просто не поставил закрытие), и тогда
       // substring(0, -1) падал с RangeError Invalid value 0..N: -1.
@@ -244,7 +244,7 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   /// Виджет для share — первая карточка + футер "Дуэт".
-  /// Рендерится offscreen, в скриншот идёт ровно эта композиция.
+  /// Рендерится offscreen, в скриншот идет ровно эта композиция.
   /// Width 480 (а не 380) — больше места под expert-reason, который длиннее
   /// чем simple/standard. Reason без maxLines чтобы не обрезался ellipsis'ом.
   Widget _buildShareableCard(PairingResult result) {
@@ -281,7 +281,7 @@ class _ResultScreenState extends State<ResultScreen>
               ],
             ),
             const SizedBox(height: 16),
-            // Сама карточка результата (упрощённая для шаринга)
+            // Сама карточка результата (упрощенная для шаринга)
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -415,7 +415,7 @@ class _ResultScreenState extends State<ResultScreen>
     setState(() => _isSharing = true);
     HapticFeedback.lightImpact();
     try {
-      // Ждём один кадр чтобы offscreen RepaintBoundary гарантированно отрендерился
+      // Ждем один кадр чтобы offscreen RepaintBoundary гарантированно отрендерился
       await Future.delayed(const Duration(milliseconds: 50));
 
       final boundary = _shareCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
@@ -441,7 +441,7 @@ class _ResultScreenState extends State<ResultScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Не удалось поделиться. Попробуйте ещё раз.'),
+            content: const Text('Не удалось поделиться. Попробуйте еще раз.'),
             backgroundColor: Colors.red.shade800,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -870,21 +870,26 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Future<void> _openBuyLink(String brand) async {
-    // В режиме "напиток → еда" ссылка ведёт на агрегатор доставки еды
+    // В режиме "напиток → еда" ссылка ведет на агрегатор доставки еды
     // (Яндекс.Еда первой опцией для РФ/КЗ — там реальные блюда из ресторанов).
-    // Каспи бесполезен для еды — он маркетплейс товаров, выдаёт одежду.
-    // В режиме "блюдо → напиток" ссылка ведёт в магазин алкоголя.
+    // Каспи бесполезен для еды — он маркетплейс товаров, выдает одежду.
+    // В режиме "блюдо → напиток" ссылка ведет в магазин алкоголя.
     final isAlcoholToFood = (_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food';
     final region = _response?.region ?? '';
     final encoded = Uri.encodeComponent(brand);
     Uri uri;
 
     if (isAlcoholToFood) {
-      // Поиск блюда в Яндекс.Еде (РФ + Алматы/Астана) либо Google fallback.
+      // Поиск блюда в Яндекс.Еде через универсальный URL eda.yandex.ru/search.
+      // Раньше eda.yandex/search открывал главную без поиска — неправильный домен.
+      // Правильный path: eda.yandex.ru/search?text=... — открывает страницу
+      // результатов с введенным запросом, пользователь видит рестораны/блюда.
+      // Google fallback для регионов где Яндекс.Еды нет — находит ресторан,
+      // рецепт, доставку с региональным контекстом.
       switch (region) {
         case 'Россия':
         case 'Казахстан':
-          uri = Uri.parse('https://eda.yandex/search?text=$encoded');
+          uri = Uri.parse('https://eda.yandex.ru/search?text=$encoded');
           break;
         default:
           uri = Uri.parse('https://www.google.com/search?q=$encoded+ресторан+доставка');

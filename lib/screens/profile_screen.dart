@@ -83,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _pairingCount = (me['pairing_count'] as num?)?.toInt() ?? 0;
         _pairingLimit = (me['pairing_limit'] as num?)?.toInt() ?? 10;
       });
-      // Если у Free сохранён expert (например выбрал до того как сделали
+      // Если у Free сохранен expert (например выбрал до того как сделали
       // Premium-only) — даунгрейдим до standard. Backend safety net тоже
       // защищает, но и UI должен показывать корректное состояние.
       if (!_isPremium && _detailLevel == 'expert') {
@@ -101,7 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   // Русское склонение по числу: 1 → подборка, 2-4 → подборки, 5+ → подборок
-  // С учётом исключений 11-14 (всегда "подборок") и десятков (21 → подборка)
+  // С учетом исключений 11-14 (всегда "подборок") и десятков (21 → подборка)
   String _pairingsLeftText(int n) {
     final mod10 = n % 10;
     final mod100 = n % 100;
@@ -131,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         content: Text(
           isAnon
-              ? 'Вы войдёте как новый анонимный пользователь. Избранное и история будут потеряны навсегда.'
+              ? 'Вы войдете как новый анонимный пользователь. Избранное и история будут потеряны навсегда.'
               : 'Вы сможете войти снова в любой момент. Избранное и история сохранятся.',
           style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.4),
         ),
@@ -231,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          // Свёрнутая шапка — текущий регион + стрелка
+          // Свернутая шапка — текущий регион + стрелка
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();

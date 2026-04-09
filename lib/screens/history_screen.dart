@@ -230,7 +230,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
             const SizedBox(width: 8),
             // Правый блок: бейдж режима детализации (тот же стиль что
-            // "Лучший выбор" на result_screen — золотой текст на тёмном
+            // "Лучший выбор" на result_screen — золотой текст на темном
             // фоне с золотой обводкой) + бейдж направления подборки.
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,

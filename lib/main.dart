@@ -13,7 +13,7 @@ import 'screens/history_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/profile_screen.dart';
 
-/// Последний сохранённый бюджет — загружается ДО runApp чтобы HomeScreen
+/// Последний сохраненный бюджет — загружается ДО runApp чтобы HomeScreen
 /// инициализировался синхронно. Раньше HomeScreen стартовал с дефолтом
 /// "Средний", потом async-load из SharedPreferences делал setState на
 /// реальное значение — пользователь видел мелькание селектора бюджета.
@@ -122,7 +122,7 @@ class _AuthGateState extends State<AuthGate> {
 
 /// Splash-экран который показывается пока Firebase проверяет auth state,
 /// минимум 1800мс (см. AuthGate._minSplashMs) чтобы пользователь успел прочитать
-/// название и ощутить бренд. Содержит логотип "Дуэт" с лёгкой пульсацией
+/// название и ощутить бренд. Содержит логотип "Дуэт" с легкой пульсацией
 /// (1.0 ↔ 1.05 — на физическом экране 1.03 глаз не цепляет) и tagline.
 /// Совпадает по дизайну с native splash — переход бесшовный.
 class _SplashScreen extends StatefulWidget {
@@ -148,7 +148,7 @@ class _SplashScreenState extends State<_SplashScreen>
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
     // Pulse 1.0 → 1.05: на физическом экране 1.03 не цепляет глаз,
-    // 1.05 — граница между "не видно" и "дёшево", правильная для реального устройства.
+    // 1.05 — граница между "не видно" и "дешево", правильная для реального устройства.
     _scale = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
     );

@@ -15,7 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _controller = TextEditingController();
   bool _isFoodToAlcohol = true;
   // Инициализируем синхронно из top-level initialBudgetKey (прогружено в main()
-  // до runApp) — без мелькания с дефолта "Средний" на сохранённое значение.
+  // до runApp) — без мелькания с дефолта "Средний" на сохраненное значение.
   late int _budgetIndex = _initialBudgetIndex();
   bool _navigating = false;
 

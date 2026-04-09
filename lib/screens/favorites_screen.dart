@@ -23,7 +23,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   bool _loading = true;
 
   // Прогресс свайпа для каждой карточки (key Dismissible → 0.0..1.0).
-  // Используется для анимации иконки корзины — scale растёт по мере свайпа.
+  // Используется для анимации иконки корзины — scale растет по мере свайпа.
   // Источник данных: Dismissible.onUpdate(DismissUpdateDetails details) → details.progress
   final Map<Key, double> _swipeProgress = {};
 
@@ -78,7 +78,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     bool undone = false;
     final overlay = Overlay.of(context);
 
-    // Overlay вставляется в root Overlay.of(context) — positioning идёт
+    // Overlay вставляется в root Overlay.of(context) — positioning идет
     // от физического низа экрана, не от body. bottom: 100 Boris не хватало
     // на Xiaomi — краями overlay залезал на навбар. Поднято до 130:
     // 60 (navbar) + 40 (gesture bar + буфер) + 30 (явный зазор чтобы не
@@ -143,7 +143,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     _undoOverlay = entry;
     overlay.insert(entry);
 
-    // Жёсткий таймер на 3 секунды — убирает overlay в любом случае.
+    // Жесткий таймер на 3 секунды — убирает overlay в любом случае.
     // Не зависит от ScaffoldMessenger, не зависит от вкладки, не зависит ни от чего.
     _undoTimer = Timer(const Duration(seconds: 3), () {
       _hideUndoOverlay();
@@ -228,7 +228,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget _buildCard(PairingResponse item, int index) {
     final firstResult = item.results.isNotEmpty ? item.results.first : null;
     final cardKey = Key('fav_${item.dish}_${item.budget}_${item.createdAt.millisecondsSinceEpoch}');
-    // 0.0 пока пользователь не свайпает, растёт до 1.0 при полном свайпе
+    // 0.0 пока пользователь не свайпает, растет до 1.0 при полном свайпе
     final progress = _swipeProgress[cardKey] ?? 0.0;
     // Scale корзинки: от 0.7 в покое до 1.2 в полном свайпе. Линейная интерполяция.
     final iconScale = 0.7 + (progress.clamp(0.0, 1.0) * 0.5);

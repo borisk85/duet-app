@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Paywall-экран — показывается когда пользователь упёрся в лимит 10 бесплатных подборок.
+/// Paywall-экран — показывается когда пользователь уперся в лимит 10 бесплатных подборок.
 ///
 /// Триггер: ApiService.pairStream бросает PairingLimitException → ResultScreen
 /// перехватывает → редиректит сюда вместо SnackBar с ошибкой.
@@ -10,7 +10,7 @@ import 'package:flutter/services.dart';
 /// но не смог из-за лимита. Это превращает блокировку в момент максимальной мотивации
 /// (психологически — конверсия выше когда блокировка совпадает с активным желанием).
 ///
-/// Пока RevenueCat не подключён, кнопка "Перейти на Premium" даёт только haptic.
+/// Пока RevenueCat не подключен, кнопка "Перейти на Premium" дает только haptic.
 /// После интеграции RevenueCat — открывает purchase flow.
 class PaywallScreen extends StatelessWidget {
   /// То что пользователь хотел подобрать (блюдо или напиток) — для персонализации.
@@ -35,9 +35,9 @@ class PaywallScreen extends StatelessWidget {
 
   static const _gold = Color(0xFFC9A84C);
   // Более яркий золотой ТОЛЬКО для primary CTA "Перейти на Premium".
-  // Основной _gold (#C9A84C) на тёмном фоне выглядит бежевым — для главного
-  // акцента нужен насыщеннее. #E8B547 — на ~15% ярче, всё ещё в палитре,
-  // не вульгарный жёлтый.
+  // Основной _gold (#C9A84C) на темном фоне выглядит бежевым — для главного
+  // акцента нужен насыщеннее. #E8B547 — на ~15% ярче, все еще в палитре,
+  // не вульгарный желтый.
   static const _goldCta = Color(0xFFE8B547);
   static const _goldText = Color(0xFFD4B563);
   static const _bg = Color(0xFF0D0D0D);
@@ -220,7 +220,7 @@ class PaywallScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   // Цена должна "дышать" — пользователь успевает осознать
-                  // $9.99 как дёшево прежде чем увидеть CTA-кнопку.
+                  // $9.99 как дешево прежде чем увидеть CTA-кнопку.
                   const SizedBox(height: 20),
                   // Кнопка покупки (только haptic — RevenueCat не интегрирован).
                   // Уменьшена с 56 до 50 чтобы дать больше места "Может быть
@@ -246,7 +246,7 @@ class PaywallScreen extends StatelessWidget {
               ),
             ),
             // "Может быть позже" — отдельный Positioned внизу Stack.
-            // Раньше TextButton в Column всё время не тапался на Xiaomi
+            // Раньше TextButton в Column все время не тапался на Xiaomi
             // несмотря на padding 60/80/100. Решение: вынести из Column
             // полностью и поставить как Positioned с фиксированным bottom 60.
             // Это полностью развязывает hit area от gesture zone и Column flow.
