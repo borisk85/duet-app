@@ -174,11 +174,14 @@ class PaywallScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        Text(
+                        // Якорная фраза для снятия возражения по цене —
+                        // золотой цвет акцентирует выгоду, а не "примечание".
+                        const Text(
                           'Меньше \$1 в месяц',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.4),
+                            color: _gold,
                             fontSize: 13,
+                            fontWeight: FontWeight.w600,
                             height: 1.2,
                           ),
                         ),
