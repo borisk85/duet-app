@@ -253,17 +253,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
                 const SizedBox(height: 6),
+                // Текстовый бейдж направления вместо нечитаемых эмоджи 🍽→🥂
+                // на 11px. Цвет отличается от detail-бейджа: золотая заливка
+                // 0.12 для food→alcohol, синяя 0.12 для alcohol→food. Текст
+                // в opacity 0.7 чтобы не конкурировать с золотым detail-бейджем.
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
                     color: item.mode == 'food_to_alcohol'
                         ? _gold.withOpacity(0.12)
                         : Colors.blue.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
-                    item.mode == 'food_to_alcohol' ? '🍽️→🥂' : '🥂→🍽️',
-                    style: const TextStyle(fontSize: 11),
+                    item.mode == 'food_to_alcohol' ? 'Еда → Напиток' : 'Напиток → Еда',
+                    style: TextStyle(
+                      color: item.mode == 'food_to_alcohol'
+                          ? _gold.withOpacity(0.85)
+                          : Colors.lightBlue.shade200,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.1,
+                    ),
                   ),
                 ),
               ],
