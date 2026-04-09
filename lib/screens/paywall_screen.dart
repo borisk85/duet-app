@@ -50,11 +50,9 @@ class PaywallScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              // Нижний padding 80 — поднимает "Может быть позже" ещё выше от
-              // Xiaomi MIUI gesture exclusion zone, чтобы кнопка не была впритык
-              // к низу экрана. 60 работало по тапу но визуально кнопка выглядела
-              // прижатой. 80 даёт воздух снизу + гарантированную тапаемость.
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 80),
+              // Нижний padding 100 — гарантированно выше Xiaomi MIUI gesture
+              // exclusion zone (она может быть до ~80dp на новых MIUI).
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -193,12 +191,11 @@ class PaywallScreen extends StatelessWidget {
                   // $9.99 как дёшево прежде чем увидеть CTA-кнопку.
                   const SizedBox(height: 20),
                   // Кнопка покупки (только haptic — RevenueCat не интегрирован).
-                  // backgroundColor _goldCta (#E8B547) ярче основного _gold —
-                  // на тёмном фоне основной _gold выглядел бежевым, а CTA
-                  // должен быть насыщенным акцентом.
+                  // Уменьшена с 56 до 50 чтобы дать больше места "Может быть
+                  // позже" подняться визуально вверх от gesture exclusion zone.
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 50,
                     child: ElevatedButton(
                       onPressed: () => HapticFeedback.mediumImpact(),
                       style: ElevatedButton.styleFrom(
@@ -213,14 +210,9 @@ class PaywallScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Зазор между primary CTA и secondary action — чуть меньше
-                  // чтобы "Может быть позже" воспринималась как пара к кнопке,
-                  // но всё ещё не сливалась с ней.
-                  const SizedBox(height: 8),
-                  // Кнопка закрыть (вторичная). НЕ ТРОГАТЬ TextButton padding/style —
-                  // любое изменение возвращает баг "не тапается с первого раза"
-                  // на Xiaomi (gesture exclusion zone). Меняем только child.style
-                  // (цвет/размер шрифта), родительский TextButton как был.
+                  // Зазор между primary CTA и secondary action.
+                  const SizedBox(height: 12),
+                  // Кнопка закрыть (вторичная).
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
                     child: Text(
@@ -232,6 +224,11 @@ class PaywallScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Дополнительный буфер ПОД "Может быть позже" — поднимает
+                  // кликабельную область ещё выше от низа экрана. Padding 100
+                  // на родителе + этот SizedBox 24 = TextButton физически
+                  // в ~140dp от низа, гарантированно выше gesture zone.
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
