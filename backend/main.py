@@ -504,6 +504,15 @@ async def pair_stream(request: Request, req: PairRequest):
     finally:
         pool.putconn(conn)
 
+    # Safety net: Expert mode только для Premium. Если Free прислал
+    # detail_level='expert' (подделка запроса, старая выборка из prefs) —
+    # принудительно даунгрейдим до standard в SAMOM начале pair_stream.
+    # Дальше всё (cache_key, prompt, INSERT в pairings) использует уже
+    # downgraded значение — никаких рассинхронов между prompt и cache.
+    # UI блокирует тап на Expert у Free как первый слой защиты.
+    if req.detail_level == "expert" and not is_premium:
+        req.detail_level = "standard"
+
     # .strip() защищает от случайных пробелов: "ягермейстер" и "ягермейстер " → один ключ.
     # preferences и is_premium включены в ключ — иначе Free с предпочтениями получил бы
     # кеш от Premium или от пользователя без предпочтений.

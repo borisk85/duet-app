@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import 'paywall_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -82,6 +83,13 @@ class _ProfileScreenState extends State<ProfileScreen>
         _pairingCount = (me['pairing_count'] as num?)?.toInt() ?? 0;
         _pairingLimit = (me['pairing_limit'] as num?)?.toInt() ?? 10;
       });
+      // Если у Free сохранён expert (например выбрал до того как сделали
+      // Premium-only) — даунгрейдим до standard. Backend safety net тоже
+      // защищает, но и UI должен показывать корректное состояние.
+      if (!_isPremium && _detailLevel == 'expert') {
+        setState(() => _detailLevel = 'standard');
+        await prefs.setString('detail_level', 'standard');
+      }
     }
   }
 
@@ -313,18 +321,21 @@ class _ProfileScreenState extends State<ProfileScreen>
         'label': 'Просто',
         'desc': 'Краткое объяснение без терминов',
         'icon': Icons.bolt_rounded,
+        'premium': false,
       },
       {
         'key': 'standard',
         'label': 'Стандарт',
         'desc': 'Почему сочетается + совет по подаче',
         'icon': Icons.balance_rounded,
+        'premium': false,
       },
       {
         'key': 'expert',
         'label': 'Эксперт',
         'desc': 'Сорт, регион, выдержка, температура, бокал',
         'icon': Icons.wine_bar_rounded,
+        'premium': true,
       },
     ];
     return Container(
@@ -334,10 +345,26 @@ class _ProfileScreenState extends State<ProfileScreen>
           final isLast = entry.key == levels.length - 1;
           final level = entry.value;
           final key = level['key'] as String;
+          final isPremiumOnly = level['premium'] as bool;
+          // Заблокирован только если Premium-only И пользователь не Premium.
+          final locked = isPremiumOnly && !_isPremium;
           final selected = _detailLevel == key;
           return GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
+              if (locked) {
+                // Free тапает Expert — открываем Paywall с контекстом.
+                // dish='Эксперт-режим' персонализирует paywall под фичу.
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const PaywallScreen(
+                      dish: 'Экспертный режим',
+                      mode: 'food_to_alcohol',
+                    ),
+                  ),
+                );
+                return;
+              }
               setState(() => _detailLevel = key);
               _save();
             },
@@ -352,7 +379,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 children: [
                   Icon(
                     level['icon'] as IconData,
-                    color: selected ? _gold : Colors.white.withOpacity(0.4),
+                    color: locked
+                        ? Colors.white.withOpacity(0.25)
+                        : (selected ? _gold : Colors.white.withOpacity(0.4)),
                     size: 22,
                   ),
                   const SizedBox(width: 14),
@@ -360,19 +389,45 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          level['label'] as String,
-                          style: TextStyle(
-                            color: selected ? _gold : Colors.white,
-                            fontSize: 15,
-                            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              level['label'] as String,
+                              style: TextStyle(
+                                color: locked
+                                    ? Colors.white.withOpacity(0.45)
+                                    : (selected ? _gold : Colors.white),
+                                fontSize: 15,
+                                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                              ),
+                            ),
+                            if (isPremiumOnly) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: _bg,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: _gold.withOpacity(0.6), width: 1),
+                                ),
+                                child: const Text(
+                                  '⚡ Premium',
+                                  style: TextStyle(
+                                    color: _gold,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Text(
                           level['desc'] as String,
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withOpacity(locked ? 0.25 : 0.4),
                             fontSize: 12,
                             height: 1.3,
                           ),
@@ -380,7 +435,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ],
                     ),
                   ),
-                  if (selected)
+                  if (locked)
+                    Icon(Icons.lock_rounded, color: Colors.white.withOpacity(0.3), size: 18)
+                  else if (selected)
                     const Icon(Icons.check_rounded, color: _gold, size: 20),
                 ],
               ),
