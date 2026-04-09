@@ -34,9 +34,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   final Set<String> _preferredTypes = {};
 
   static const _regions = ['СНГ', 'Россия', 'Казахстан', 'Украина', 'Беларусь'];
+  // Ключи строго совпадают с profile_screen.dart _alcoholTypes — иначе
+  // выбор в онбординге не отображается потом в профиле как выбранный.
+  // Это shared SharedPreferences key 'preferred_types', сравнение по
+  // строкам. Раньше был баг: 'whisky' в онбординге vs 'whiskey' в профиле.
   static const _alcoholTypes = [
     {'key': 'wine', 'label': 'Вино', 'emoji': '🍷'},
-    {'key': 'whisky', 'label': 'Виски', 'emoji': '🥃'},
+    {'key': 'whiskey', 'label': 'Виски', 'emoji': '🥃'},
     {'key': 'cognac', 'label': 'Коньяк', 'emoji': '🥃'},
     {'key': 'beer', 'label': 'Пиво', 'emoji': '🍺'},
     {'key': 'vodka', 'label': 'Водка', 'emoji': '🫗'},
