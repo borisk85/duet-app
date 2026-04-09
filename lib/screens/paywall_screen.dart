@@ -213,13 +213,12 @@ class PaywallScreen extends StatelessWidget {
                   // Зазор между primary CTA и secondary action — чтобы
                   // "Может быть позже" не сливалась с золотой кнопкой.
                   const SizedBox(height: 16),
-                  // Кнопка закрыть (вторичная) — увеличена с 14→15px и
-                  // стала более читаемой, не теряется внизу экрана.
+                  // Кнопка закрыть (вторичная). НЕ ТРОГАТЬ TextButton padding/style —
+                  // любое изменение возвращает баг "не тапается с первого раза"
+                  // на Xiaomi (gesture exclusion zone). Меняем только child.style
+                  // (цвет/размер шрифта), родительский TextButton как был.
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
                     child: Text(
                       'Может быть позже',
                       style: TextStyle(
