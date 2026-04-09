@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Цвет фона adaptive icon — совпадает с _bg в Flutter (#0D0D0D).
+         Используется в mipmap-anydpi-v26/ic_launcher.xml как background слой
+         для лаунчеров поддерживающих adaptive icons (Android 8.0+, Pixel и др).
+         Без этого Pixel launcher оборачивает иконку в белую круглую плашку. -->
+    <color name="ic_launcher_background">#0D0D0D</color>
+</resources>
