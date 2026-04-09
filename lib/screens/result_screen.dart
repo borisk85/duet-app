@@ -870,25 +870,42 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Future<void> _openBuyLink(String brand) async {
+    // В режиме "напиток → еда" ссылка ведёт на агрегатор доставки еды
+    // (Яндекс.Еда первой опцией для РФ/КЗ — там реальные блюда из ресторанов).
+    // Каспи бесполезен для еды — он маркетплейс товаров, выдаёт одежду.
+    // В режиме "блюдо → напиток" ссылка ведёт в магазин алкоголя.
+    final isAlcoholToFood = (_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food';
     final region = _response?.region ?? '';
     final encoded = Uri.encodeComponent(brand);
     Uri uri;
 
-    switch (region) {
-      case 'Казахстан':
-        uri = Uri.parse('https://kaspi.kz/shop/search/?q=$encoded');
-        break;
-      case 'Россия':
-        uri = Uri.parse('https://winestyle.ru/search/?search=$encoded');
-        break;
-      case 'Украина':
-        uri = Uri.parse('https://www.google.com/search?q=$encoded+купить+Киев');
-        break;
-      case 'Беларусь':
-        uri = Uri.parse('https://www.google.com/search?q=$encoded+купить+Минск');
-        break;
-      default:
-        uri = Uri.parse('https://www.google.com/search?q=$encoded+купить');
+    if (isAlcoholToFood) {
+      // Поиск блюда в Яндекс.Еде (РФ + Алматы/Астана) либо Google fallback.
+      switch (region) {
+        case 'Россия':
+        case 'Казахстан':
+          uri = Uri.parse('https://eda.yandex/search?text=$encoded');
+          break;
+        default:
+          uri = Uri.parse('https://www.google.com/search?q=$encoded+ресторан+доставка');
+      }
+    } else {
+      switch (region) {
+        case 'Казахстан':
+          uri = Uri.parse('https://kaspi.kz/shop/search/?q=$encoded');
+          break;
+        case 'Россия':
+          uri = Uri.parse('https://winestyle.ru/search/?search=$encoded');
+          break;
+        case 'Украина':
+          uri = Uri.parse('https://www.google.com/search?q=$encoded+купить+Киев');
+          break;
+        case 'Беларусь':
+          uri = Uri.parse('https://www.google.com/search?q=$encoded+купить+Минск');
+          break;
+        default:
+          uri = Uri.parse('https://www.google.com/search?q=$encoded+купить');
+      }
     }
 
     if (await canLaunchUrl(uri)) {
