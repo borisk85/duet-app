@@ -50,11 +50,11 @@ class PaywallScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              // Нижний padding 60 — Xiaomi MIUI gesture exclusion zone у Boris
-              // больше 40dp (с 40 кнопка "Может быть позже" вообще не тапалась).
-              // 60 гарантированно поднимает TextButton выше любой системной
-              // жестовой зоны на любом Android launcher.
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 60),
+              // Нижний padding 80 — поднимает "Может быть позже" ещё выше от
+              // Xiaomi MIUI gesture exclusion zone, чтобы кнопка не была впритык
+              // к низу экрана. 60 работало по тапу но визуально кнопка выглядела
+              // прижатой. 80 даёт воздух снизу + гарантированную тапаемость.
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 80),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -210,9 +210,10 @@ class PaywallScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Зазор между primary CTA и secondary action — чтобы
-                  // "Может быть позже" не сливалась с золотой кнопкой.
-                  const SizedBox(height: 16),
+                  // Зазор между primary CTA и secondary action — чуть меньше
+                  // чтобы "Может быть позже" воспринималась как пара к кнопке,
+                  // но всё ещё не сливалась с ней.
+                  const SizedBox(height: 8),
                   // Кнопка закрыть (вторичная). НЕ ТРОГАТЬ TextButton padding/style —
                   // любое изменение возвращает баг "не тапается с первого раза"
                   // на Xiaomi (gesture exclusion zone). Меняем только child.style
