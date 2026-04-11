@@ -343,13 +343,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _gold.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(5),
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: _gold, width: 1),
                     ),
                     child: Text(
                       _detailLabel(item.detailLevel),
-                      style: TextStyle(
-                        color: _gold.withOpacity(0.85),
+                      style: const TextStyle(
+                        color: _gold,
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.2,
@@ -360,17 +361,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                     decoration: BoxDecoration(
-                      color: item.mode == 'food_to_alcohol'
-                          ? _gold.withOpacity(0.12)
-                          : Colors.blue.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(5),
+                      color: const Color(0xFF2A2A2A),
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       item.mode == 'food_to_alcohol' ? 'Еда → Напиток' : 'Напиток → Еда',
                       style: TextStyle(
-                        color: item.mode == 'food_to_alcohol'
-                            ? _gold.withOpacity(0.85)
-                            : Colors.lightBlue.shade200,
+                        color: Colors.white.withOpacity(0.65),
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.1,
