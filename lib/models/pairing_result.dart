@@ -48,6 +48,14 @@ class PairingResult {
     if (t.contains('ром') || t.contains('rum')) return '🍹';
     if (t.contains('текила') || t.contains('tequila')) return '🌵';
     if (t.contains('коктейл') || t.contains('cocktail')) return '🍸';
+    // Для блюд (режим alcohol_to_food) — маппинг по категории еды
+    if (t.contains('закуска') || t.contains('снек') || t.contains('appetizer')) return '🥗';
+    if (t.contains('основное') || t.contains('main') || t.contains('горячее')) return '🍖';
+    if (t.contains('десерт') || t.contains('dessert') || t.contains('сладкое')) return '🍰';
+    if (t.contains('сыр') || t.contains('cheese')) return '🧀';
+    if (t.contains('салат') || t.contains('salad')) return '🥗';
+    if (t.contains('суп') || t.contains('soup')) return '🍲';
+    if (t.contains('морепродукт') || t.contains('seafood') || t.contains('рыб')) return '🐟';
     return alcoholTypeEmoji;
   }
 

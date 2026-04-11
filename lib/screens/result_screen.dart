@@ -731,29 +731,28 @@ class _ResultScreenState extends State<ResultScreen>
                 ),
                 const SizedBox(height: 2),
                 if ((_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food') ...[
-                  // Напиток→Еда: название блюда кликабельное, ресторан — просто текст
+                  // Напиток→Еда: название блюда кликабельное, иконка сразу после текста
                   GestureDetector(
                     onTap: () => _openBuyLink(result.name),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            result.name,
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: result.name,
                             style: const TextStyle(color: _goldText, fontSize: 16, fontWeight: FontWeight.w700),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.open_in_new_rounded, size: 12, color: _goldText),
-                      ],
+                          const WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: Padding(
+                              padding: EdgeInsets.only(left: 4),
+                              child: Icon(Icons.open_in_new_rounded, size: 12, color: _goldText),
+                            ),
+                          ),
+                        ],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  Text(
-                    result.brand,
-                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ] else ...[
                   // Еда→Напиток: название напитка обычный текст, бренд кликабельный
