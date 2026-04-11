@@ -213,7 +213,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.dish,
+                    item.dish.isNotEmpty ? '${item.dish[0].toUpperCase()}${item.dish.substring(1)}' : '',
                     style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -236,16 +236,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _bg,
+                    color: _gold.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: _gold.withOpacity(0.5), width: 1),
                   ),
                   child: Text(
                     detailLabel,
-                    style: const TextStyle(
-                      color: _gold,
+                    style: TextStyle(
+                      color: _gold.withOpacity(0.85),
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.2,

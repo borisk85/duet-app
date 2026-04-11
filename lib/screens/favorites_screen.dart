@@ -225,6 +225,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
+  String _detailLabel(String level) {
+    switch (level) {
+      case 'simple':
+        return 'Просто';
+      case 'expert':
+        return 'Эксперт';
+      case 'standard':
+      default:
+        return 'Стандарт';
+    }
+  }
+
   Widget _buildCard(PairingResponse item, int index) {
     final firstResult = item.results.isNotEmpty ? item.results.first : null;
     final cardKey = Key('fav_${item.dish}_${item.budget}_${item.createdAt.millisecondsSinceEpoch}');
@@ -309,7 +321,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.dish,
+                      item.dish.isNotEmpty ? '${item.dish[0].toUpperCase()}${item.dish.substring(1)}' : '',
                       style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -324,7 +336,49 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: Colors.white24, size: 20),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _gold.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      _detailLabel(item.detailLevel),
+                      style: TextStyle(
+                        color: _gold.withOpacity(0.85),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: item.mode == 'food_to_alcohol'
+                          ? _gold.withOpacity(0.12)
+                          : Colors.blue.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      item.mode == 'food_to_alcohol' ? 'Еда → Напиток' : 'Напиток → Еда',
+                      style: TextStyle(
+                        color: item.mode == 'food_to_alcohol'
+                            ? _gold.withOpacity(0.85)
+                            : Colors.lightBlue.shade200,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
