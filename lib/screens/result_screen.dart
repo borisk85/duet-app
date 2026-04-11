@@ -730,31 +730,55 @@ class _ResultScreenState extends State<ResultScreen>
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  result.name,
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
-                ),
-                GestureDetector(
-                  onTap: () => _openBuyLink(
-                    (_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food'
-                        ? result.name
-                        : result.brand,
-                  ),
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          result.brand,
-                          style: const TextStyle(color: _goldText, fontSize: 13),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                if ((_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food') ...[
+                  // Напиток→Еда: название блюда кликабельное, ресторан — просто текст
+                  GestureDetector(
+                    onTap: () => _openBuyLink(result.name),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            result.name,
+                            style: const TextStyle(color: _goldText, fontSize: 16, fontWeight: FontWeight.w700),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.open_in_new_rounded, size: 12, color: _goldText),
-                    ],
+                        const SizedBox(width: 4),
+                        const Icon(Icons.open_in_new_rounded, size: 12, color: _goldText),
+                      ],
+                    ),
                   ),
-                ),
+                  Text(
+                    result.brand,
+                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ] else ...[
+                  // Еда→Напиток: название напитка обычный текст, бренд кликабельный
+                  Text(
+                    result.name,
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  GestureDetector(
+                    onTap: () => _openBuyLink(result.brand),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            result.brand,
+                            style: const TextStyle(color: _goldText, fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.open_in_new_rounded, size: 12, color: _goldText),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -893,7 +917,7 @@ class _ResultScreenState extends State<ResultScreen>
       switch (region) {
         case 'Россия':
         case 'Казахстан':
-          uri = Uri.parse('https://eda.yandex.ru/search?text=$encoded');
+          uri = Uri.parse('https://www.google.com/search?q=$encoded+заказать+доставка');
           break;
         default:
           uri = Uri.parse('https://www.google.com/search?q=$encoded+ресторан+доставка');
@@ -918,14 +942,13 @@ class _ResultScreenState extends State<ResultScreen>
     }
 
     if (await canLaunchUrl(uri)) {
-      // Yandex.Eda app перехватывает ссылку но не передает параметр
-      // поиска — открывает пустую главную. Для eda.yandex ссылок
-      // открываем через inAppBrowserView (Custom Tabs / WebView) —
-      // это обходит app link interception.
-      final useInAppBrowser = uri.host.contains('eda.yandex');
+      // Yandex.Eda app перехватывает ссылку и не передает параметр
+      // поиска. inAppWebView открывает WebView внутри нашего приложения —
+      // Android не может перехватить, URL с параметром text= работает.
+      final useWebView = uri.host.contains('eda.yandex');
       await launchUrl(
         uri,
-        mode: useInAppBrowser ? LaunchMode.inAppBrowserView : LaunchMode.externalApplication,
+        mode: useWebView ? LaunchMode.inAppWebView : LaunchMode.externalApplication,
       );
     }
   }
