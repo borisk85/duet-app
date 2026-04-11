@@ -225,6 +225,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
+  String _drinkEmoji(String drink) {
+    final d = drink.toLowerCase();
+    if (d.contains('белое') || d.contains('розовое') || d.contains('рислинг') || d.contains('шардоне') || d.contains('пино гриджо') || d.contains('совиньон блан')) return '🥂';
+    if (d.contains('игрист') || d.contains('шампан') || d.contains('просекко') || d.contains('prosecco') || d.contains('кава')) return '🥂';
+    if (d.contains('вино') || d.contains('wine') || d.contains('мерло') || d.contains('каберне') || d.contains('шираз') || d.contains('пино нуар') || d.contains('саперави') || d.contains('мальбек')) return '🍷';
+    if (d.contains('пиво') || d.contains('beer') || d.contains('лагер') || d.contains('эль') || d.contains('стаут') || d.contains('хугарден') || d.contains('hoegaarden') || d.contains('гиннесс') || d.contains('guinness') || d.contains('ipa')) return '🍺';
+    if (d.contains('водка') || d.contains('vodka') || d.contains('виски') || d.contains('whisky') || d.contains('whiskey') || d.contains('бурбон') || d.contains('скотч')) return '🥃';
+    if (d.contains('коньяк') || d.contains('бренди') || d.contains('cognac') || d.contains('джин') || d.contains('gin') || d.contains('ром') || d.contains('rum')) return '🥃';
+    if (d.contains('текила') || d.contains('tequila') || d.contains('мескаль')) return '🥃';
+    if (d.contains('коктейл') || d.contains('cocktail') || d.contains('мохито') || d.contains('маргарита') || d.contains('негрони')) return '🍸';
+    return '🍷';
+  }
+
   String _detailLabel(String level) {
     switch (level) {
       case 'simple':
@@ -312,7 +325,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           child: Row(
             children: [
               Text(
-                firstResult?.resolvedEmoji ?? '🍷',
+                item.mode == 'alcohol_to_food'
+                    ? _drinkEmoji(item.dish)
+                    : (firstResult?.resolvedEmoji ?? '🍷'),
                 style: const TextStyle(fontSize: 32),
               ),
               const SizedBox(width: 14),

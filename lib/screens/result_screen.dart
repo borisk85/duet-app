@@ -735,7 +735,11 @@ class _ResultScreenState extends State<ResultScreen>
                   style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 GestureDetector(
-                  onTap: () => _openBuyLink(result.brand),
+                  onTap: () => _openBuyLink(
+                    (_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food'
+                        ? result.name
+                        : result.brand,
+                  ),
                   child: Row(
                     children: [
                       Flexible(
@@ -914,7 +918,15 @@ class _ResultScreenState extends State<ResultScreen>
     }
 
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      // Yandex.Eda app перехватывает ссылку но не передает параметр
+      // поиска — открывает пустую главную. Для eda.yandex ссылок
+      // открываем через inAppBrowserView (Custom Tabs / WebView) —
+      // это обходит app link interception.
+      final useInAppBrowser = uri.host.contains('eda.yandex');
+      await launchUrl(
+        uri,
+        mode: useInAppBrowser ? LaunchMode.inAppBrowserView : LaunchMode.externalApplication,
+      );
     }
   }
 
