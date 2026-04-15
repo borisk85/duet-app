@@ -365,7 +365,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
           const SizedBox(height: 28),
           const Text(
-            'Что любите пить?',
+            'Ваши любимые напитки?',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
@@ -376,7 +376,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
           const SizedBox(height: 10),
           Text(
-            'Необязательно. До 3 категорий',
+            'Выберите до 3 — или пропустите',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.55),
