@@ -47,3 +47,7 @@ backend/.env
 *.env
 android/app/google-services.json
 lib/firebase_options.dart
+
+# Landing page (temporary coming soon, then full site) — отдельный Vercel проект,
+# не нужен в GitHub. Когда сделаем нормальный сайт, просто удалим папку.
+duet-landing/
