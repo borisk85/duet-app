@@ -30,9 +30,9 @@ class ResultScreen extends StatefulWidget {
     this.mode,
     this.budget,
   }) : assert(
-          response != null || (dish != null && mode != null && budget != null),
-          'Either response or dish/mode/budget must be provided',
-        );
+         response != null || (dish != null && mode != null && budget != null),
+         'Either response or dish/mode/budget must be provided',
+       );
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -88,8 +88,14 @@ class _ResultScreenState extends State<ResultScreen>
   Future<void> _checkIfSaved() async {
     if (_response == null) return;
     final favorites = await ApiService.getFavorites();
-    final saved = favorites.any((f) => f.dish == _response!.dish && f.budget == _response!.budget);
-    if (mounted) setState(() { _isSaved = saved; _isSavedChecked = true; });
+    final saved = favorites.any(
+      (f) => f.dish == _response!.dish && f.budget == _response!.budget,
+    );
+    if (mounted)
+      setState(() {
+        _isSaved = saved;
+        _isSavedChecked = true;
+      });
   }
 
   Future<void> _startStream() async {
@@ -124,11 +130,29 @@ class _ResultScreenState extends State<ResultScreen>
       // Парсим JSON. Если Claude вернул свободный текст (невалидный запрос,
       // где модель проигнорировала инструкцию про error-JSON) — ловим
       // FormatException и показываем понятное сообщение вместо техническое.
-      final dynamic data;
+      // Fallback: иногда модель оборачивает валидный JSON пояснительным prose
+      // ("Вот ваш подбор: {...} спасибо"). Извлекаем substring между первой
+      // `{` и последней `}` и парсим повторно — спасает от ложных "не
+      // распознано" на валидных блюдах типа "рибай", "стейки рибай".
+      dynamic data;
       try {
         data = jsonDecode(raw);
       } on FormatException {
-        throw Exception('Не удалось распознать блюдо. Попробуйте уточнить название или выбрать другое.');
+        final first = raw.indexOf('{');
+        final last = raw.lastIndexOf('}');
+        if (first != -1 && last > first) {
+          try {
+            data = jsonDecode(raw.substring(first, last + 1));
+          } on FormatException {
+            throw Exception(
+              'Не удалось распознать блюдо. Попробуйте уточнить название или выбрать другое.',
+            );
+          }
+        } else {
+          throw Exception(
+            'Не удалось распознать блюдо. Попробуйте уточнить название или выбрать другое.',
+          );
+        }
       }
 
       // Claude вернул поле error — невалидный запрос (корм для животных,
@@ -181,10 +205,8 @@ class _ResultScreenState extends State<ResultScreen>
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => PaywallScreen(
-              dish: widget.dish!,
-              mode: widget.mode!,
-            ),
+            builder: (_) =>
+                PaywallScreen(dish: widget.dish!, mode: widget.mode!),
           ),
         );
       }
@@ -220,8 +242,8 @@ class _ResultScreenState extends State<ResultScreen>
                 _buildError()
               else ...[
                 ...(_response!.results.asMap().entries.map(
-                      (e) => _buildResultCard(e.key + 1, e.value),
-                    )),
+                  (e) => _buildResultCard(e.key + 1, e.value),
+                )),
                 const SizedBox(height: 24),
                 _buildSaveButton(context),
               ],
@@ -262,7 +284,9 @@ class _ResultScreenState extends State<ResultScreen>
             Row(
               children: [
                 Text(
-                  (_response?.mode ?? 'food_to_alcohol') == 'food_to_alcohol' ? '🍽️' : '🥂',
+                  (_response?.mode ?? 'food_to_alcohol') == 'food_to_alcohol'
+                      ? '🍽️'
+                      : '🥂',
                   style: const TextStyle(fontSize: 22),
                 ),
                 const SizedBox(width: 10),
@@ -295,12 +319,18 @@ class _ResultScreenState extends State<ResultScreen>
                 children: [
                   Row(
                     children: [
-                      Text(result.resolvedEmoji, style: const TextStyle(fontSize: 18)),
+                      Text(
+                        result.resolvedEmoji,
+                        style: const TextStyle(fontSize: 18),
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           result.alcoholType,
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 12,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -372,17 +402,27 @@ class _ResultScreenState extends State<ResultScreen>
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     // Кнопка Поделиться активна только когда подборка реально готова (есть results).
-    final canShare = _response != null && _response!.results.isNotEmpty && !_isSharing;
+    final canShare =
+        _response != null && _response!.results.isNotEmpty && !_isSharing;
     return AppBar(
       backgroundColor: _bg,
       surfaceTintColor: Colors.transparent,
       leading: GestureDetector(
         onTap: () => Navigator.pop(context),
-        child: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white54, size: 20),
+        child: const Icon(
+          Icons.arrow_back_ios_rounded,
+          color: Colors.white54,
+          size: 20,
+        ),
       ),
       title: const Text(
         'Дуэт',
-        style: TextStyle(color: _gold, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 1),
+        style: TextStyle(
+          color: _gold,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1,
+        ),
       ),
       centerTitle: true,
       actions: [
@@ -391,7 +431,10 @@ class _ResultScreenState extends State<ResultScreen>
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: _gold),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _gold,
+                  ),
                 )
               : Icon(
                   Icons.ios_share_rounded,
@@ -418,25 +461,29 @@ class _ResultScreenState extends State<ResultScreen>
       // Ждем один кадр чтобы offscreen RepaintBoundary гарантированно отрендерился
       await Future.delayed(const Duration(milliseconds: 50));
 
-      final boundary = _shareCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary =
+          _shareCardKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) throw Exception('share boundary not found');
 
       // pixelRatio 3.0 = retina-качество, хорошо смотрится в Stories
       final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final ByteData? byteData = await image.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
       if (byteData == null) throw Exception('toByteData failed');
       final Uint8List pngBytes = byteData.buffer.asUint8List();
 
       // Сохраняем во временную папку — Android share требует файл, не bytes напрямую
       final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/duet_pairing_${DateTime.now().millisecondsSinceEpoch}.png').create();
+      final file = await File(
+        '${tempDir.path}/duet_pairing_${DateTime.now().millisecondsSinceEpoch}.png',
+      ).create();
       await file.writeAsBytes(pngBytes);
 
       // Без параметра text — tagline уже зашит на самом изображении,
       // WhatsApp/Telegram не должны добавлять дублирующую подпись.
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'image/png')],
-      );
+      await Share.shareXFiles([XFile(file.path, mimeType: 'image/png')]);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -444,7 +491,9 @@ class _ResultScreenState extends State<ResultScreen>
             content: const Text('Не удалось поделиться. Попробуйте еще раз.'),
             backgroundColor: Colors.red.shade800,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
           ),
         );
@@ -479,12 +528,19 @@ class _ResultScreenState extends State<ResultScreen>
               children: [
                 Text(
                   mode == 'food_to_alcohol' ? 'Блюдо' : 'Напиток',
-                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.4),
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   dish,
-                  style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 // Бейдж бюджета показываем только в режиме "блюдо → напиток".
                 // В режиме "напиток → еда" бюджет не выбирается на главном экране,
@@ -492,16 +548,25 @@ class _ResultScreenState extends State<ResultScreen>
                 if (mode == 'food_to_alcohol') ...[
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: _gold.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      budget == 'budget' ? '💰 Бюджетно'
-                          : budget == 'premium' ? '💰💰💰 Премиум'
+                      budget == 'budget'
+                          ? '💰 Бюджетно'
+                          : budget == 'premium'
+                          ? '💰💰💰 Премиум'
                           : '💰💰 Средний',
-                      style: const TextStyle(color: _gold, fontSize: 11, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: _gold,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -531,7 +596,7 @@ class _ResultScreenState extends State<ResultScreen>
   Widget _buildSkeletonCard() {
     return AnimatedBuilder(
       animation: _pulseController,
-      builder: (_, __) {
+      builder: (_, _) {
         final op = 0.05 + _pulseController.value * 0.07;
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -544,24 +609,26 @@ class _ResultScreenState extends State<ResultScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                _skel(32, 32, op, radius: 8),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _skel(10, 60, op),
-                      const SizedBox(height: 6),
-                      _skel(15, 150, op),
-                      const SizedBox(height: 5),
-                      _skel(12, 100, op),
-                    ],
+              Row(
+                children: [
+                  _skel(32, 32, op, radius: 8),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _skel(10, 60, op),
+                        const SizedBox(height: 6),
+                        _skel(15, 150, op),
+                        const SizedBox(height: 5),
+                        _skel(12, 100, op),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                _skel(26, 56, op, radius: 8),
-              ]),
+                  const SizedBox(width: 12),
+                  _skel(26, 56, op, radius: 8),
+                ],
+              ),
               const SizedBox(height: 16),
               _skelLine(14, op),
               const SizedBox(height: 6),
@@ -575,11 +642,13 @@ class _ResultScreenState extends State<ResultScreen>
                   color: Colors.white.withOpacity(op * 0.6),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Row(children: [
-                  _skel(14, 14, op, radius: 4),
-                  const SizedBox(width: 8),
-                  Expanded(child: _skel(12, 0, op)),
-                ]),
+                child: Row(
+                  children: [
+                    _skel(14, 14, op, radius: 4),
+                    const SizedBox(width: 8),
+                    Expanded(child: _skel(12, 0, op)),
+                  ],
+                ),
               ),
             ],
           ),
@@ -600,13 +669,16 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Widget _skelLine(double h, double op, {double fraction = 1.0}) {
-    return Row(children: [
-      Expanded(
-        flex: (fraction * 100).round(),
-        child: _skel(h, 0, op),
-      ),
-      if (fraction < 1.0) Expanded(flex: ((1 - fraction) * 100).round(), child: const SizedBox()),
-    ]);
+    return Row(
+      children: [
+        Expanded(flex: (fraction * 100).round(), child: _skel(h, 0, op)),
+        if (fraction < 1.0)
+          Expanded(
+            flex: ((1 - fraction) * 100).round(),
+            child: const SizedBox(),
+          ),
+      ],
+    );
   }
 
   // ── Ошибка ──────────────────────────────────────────────────────────────────
@@ -619,26 +691,42 @@ class _ResultScreenState extends State<ResultScreen>
           // Нейтральная info-иконка вместо wifi_off — ошибка может быть и
           // не сетевой (невалидный запрос, ошибка парсинга, лимит и т.д.).
           // Wi-Fi иконка вводила в заблуждение про "нет интернета".
-          Icon(Icons.info_outline_rounded, color: Colors.white.withOpacity(0.3), size: 48),
+          Icon(
+            Icons.info_outline_rounded,
+            color: Colors.white.withOpacity(0.3),
+            size: 48,
+          ),
           const SizedBox(height: 16),
           Text(
             _error ?? 'Что-то пошло не так',
-            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14, height: 1.5),
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.5),
+              fontSize: 14,
+              height: 1.5,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
-              setState(() { _isLoading = true; _error = null; });
+              setState(() {
+                _isLoading = true;
+                _error = null;
+              });
               _startStream();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _gold,
               foregroundColor: _bg,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
-            child: const Text('Повторить', style: TextStyle(fontWeight: FontWeight.w700)),
+            child: const Text(
+              'Повторить',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),
@@ -654,7 +742,9 @@ class _ResultScreenState extends State<ResultScreen>
         color: _card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: index == 1 ? _gold.withOpacity(0.4) : Colors.white.withOpacity(0.06),
+          color: index == 1
+              ? _gold.withOpacity(0.4)
+              : Colors.white.withOpacity(0.06),
           width: index == 1 ? 1.5 : 1,
         ),
       ),
@@ -669,7 +759,11 @@ class _ResultScreenState extends State<ResultScreen>
               children: [
                 Text(
                   result.reason,
-                  style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.5),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
                 ),
                 // Блок "Почему это работает" — только в Эксперт-режиме.
                 // whyItWorks приходит с бэкенда только когда detail_level == expert.
@@ -717,12 +811,18 @@ class _ResultScreenState extends State<ResultScreen>
               children: [
                 Row(
                   children: [
-                    Text(result.resolvedEmoji, style: const TextStyle(fontSize: 14)),
+                    Text(
+                      result.resolvedEmoji,
+                      style: const TextStyle(fontSize: 14),
+                    ),
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
                         result.alcoholType,
-                        style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 12,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -730,7 +830,8 @@ class _ResultScreenState extends State<ResultScreen>
                   ],
                 ),
                 const SizedBox(height: 2),
-                if ((_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food') ...[
+                if ((_response?.mode ?? 'food_to_alcohol') ==
+                    'alcohol_to_food') ...[
                   // Напиток→Еда: название блюда кликабельное, иконка сразу после текста
                   GestureDetector(
                     onTap: () => _openBuyLink(result.name),
@@ -739,13 +840,21 @@ class _ResultScreenState extends State<ResultScreen>
                         children: [
                           TextSpan(
                             text: result.name,
-                            style: const TextStyle(color: _goldText, fontSize: 16, fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                              color: _goldText,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           const WidgetSpan(
                             alignment: PlaceholderAlignment.middle,
                             child: Padding(
                               padding: EdgeInsets.only(left: 4),
-                              child: Icon(Icons.open_in_new_rounded, size: 12, color: _goldText),
+                              child: Icon(
+                                Icons.open_in_new_rounded,
+                                size: 12,
+                                color: _goldText,
+                              ),
                             ),
                           ),
                         ],
@@ -758,7 +867,11 @@ class _ResultScreenState extends State<ResultScreen>
                   // Еда→Напиток: название напитка обычный текст, бренд кликабельный
                   Text(
                     result.name,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   GestureDetector(
                     onTap: () => _openBuyLink(result.brand),
@@ -767,13 +880,20 @@ class _ResultScreenState extends State<ResultScreen>
                         Flexible(
                           child: Text(
                             result.brand,
-                            style: const TextStyle(color: _goldText, fontSize: 13),
+                            style: const TextStyle(
+                              color: _goldText,
+                              fontSize: 13,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(Icons.open_in_new_rounded, size: 12, color: _goldText),
+                        const Icon(
+                          Icons.open_in_new_rounded,
+                          size: 12,
+                          color: _goldText,
+                        ),
                       ],
                     ),
                   ),
@@ -790,7 +910,10 @@ class _ResultScreenState extends State<ResultScreen>
             children: [
               if (index == 1) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: _card,
                     borderRadius: BorderRadius.circular(6),
@@ -811,14 +934,20 @@ class _ResultScreenState extends State<ResultScreen>
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 110),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     result.priceRange,
-                    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 12,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -837,9 +966,7 @@ class _ResultScreenState extends State<ResultScreen>
       decoration: BoxDecoration(
         color: _gold.withOpacity(0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border(
-          left: BorderSide(color: _gold, width: 3),
-        ),
+        border: Border(left: BorderSide(color: _gold, width: 3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -888,7 +1015,11 @@ class _ResultScreenState extends State<ResultScreen>
           Expanded(
             child: Text(
               result.servingTip,
-              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13, height: 1.4),
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -901,7 +1032,8 @@ class _ResultScreenState extends State<ResultScreen>
     // (Яндекс.Еда первой опцией для РФ/КЗ — там реальные блюда из ресторанов).
     // Каспи бесполезен для еды — он маркетплейс товаров, выдает одежду.
     // В режиме "блюдо → напиток" ссылка ведет в магазин алкоголя.
-    final isAlcoholToFood = (_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food';
+    final isAlcoholToFood =
+        (_response?.mode ?? 'food_to_alcohol') == 'alcohol_to_food';
     final region = _response?.region ?? '';
     final encoded = Uri.encodeComponent(brand);
     Uri uri;
@@ -916,10 +1048,14 @@ class _ResultScreenState extends State<ResultScreen>
       switch (region) {
         case 'Россия':
         case 'Казахстан':
-          uri = Uri.parse('https://www.google.com/search?q=$encoded+заказать+доставка');
+          uri = Uri.parse(
+            'https://www.google.com/search?q=$encoded+заказать+доставка',
+          );
           break;
         default:
-          uri = Uri.parse('https://www.google.com/search?q=$encoded+ресторан+доставка');
+          uri = Uri.parse(
+            'https://www.google.com/search?q=$encoded+ресторан+доставка',
+          );
       }
     } else {
       switch (region) {
@@ -930,10 +1066,14 @@ class _ResultScreenState extends State<ResultScreen>
           uri = Uri.parse('https://winestyle.ru/search/?search=$encoded');
           break;
         case 'Украина':
-          uri = Uri.parse('https://www.google.com/search?q=$encoded+купить+Киев');
+          uri = Uri.parse(
+            'https://www.google.com/search?q=$encoded+купить+Киев',
+          );
           break;
         case 'Беларусь':
-          uri = Uri.parse('https://www.google.com/search?q=$encoded+купить+Минск');
+          uri = Uri.parse(
+            'https://www.google.com/search?q=$encoded+купить+Минск',
+          );
           break;
         default:
           uri = Uri.parse('https://www.google.com/search?q=$encoded+купить');
@@ -947,7 +1087,9 @@ class _ResultScreenState extends State<ResultScreen>
       final useWebView = uri.host.contains('eda.yandex');
       await launchUrl(
         uri,
-        mode: useWebView ? LaunchMode.inAppWebView : LaunchMode.externalApplication,
+        mode: useWebView
+            ? LaunchMode.inAppWebView
+            : LaunchMode.externalApplication,
       );
     }
   }
@@ -963,35 +1105,49 @@ class _ResultScreenState extends State<ResultScreen>
       width: double.infinity,
       height: 54,
       child: ElevatedButton(
-        onPressed: _isSaved ? () {} : () async {
-          HapticFeedback.mediumImpact();
-          if (_response == null) return;
-          try {
-            await ApiService.saveFavorite(_response!);
-            if (!mounted) return;
-            setState(() => _fadingOut = true);
-            await Future.delayed(const Duration(milliseconds: 160));
-            if (!mounted) return;
-            setState(() {
-              _isSaved = true;
-              _fadingOut = false;
-            });
-          } catch (e) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(e.toString().replaceAll('Exception: ', '')),
-                backgroundColor: Colors.red.shade800,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-              ));
-            }
-          }
-        },
+        onPressed: _isSaved
+            ? () {}
+            : () async {
+                HapticFeedback.mediumImpact();
+                if (_response == null) return;
+                try {
+                  await ApiService.saveFavorite(_response!);
+                  if (!mounted) return;
+                  setState(() => _fadingOut = true);
+                  await Future.delayed(const Duration(milliseconds: 160));
+                  if (!mounted) return;
+                  setState(() {
+                    _isSaved = true;
+                    _fadingOut = false;
+                  });
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.toString().replaceAll('Exception: ', ''),
+                        ),
+                        backgroundColor: Colors.red.shade800,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        margin: const EdgeInsets.only(
+                          bottom: 80,
+                          left: 16,
+                          right: 16,
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: _gold,
           foregroundColor: _bg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           elevation: 0,
         ),
         child: AnimatedOpacity(
@@ -1001,11 +1157,17 @@ class _ResultScreenState extends State<ResultScreen>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(_isSaved ? Icons.star_rounded : Icons.star_outline_rounded, size: 20),
+              Icon(
+                _isSaved ? Icons.star_rounded : Icons.star_outline_rounded,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 _isSaved ? 'Сохранено в избранное' : 'Сохранить в избранное',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),

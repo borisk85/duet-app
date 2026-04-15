@@ -37,7 +37,7 @@ class PairingResult {
 
   String get resolvedEmoji {
     final t = alcoholType.toLowerCase();
-    if (t.contains('белое') || t.contains('white')) return '🥂';
+    if (t.contains('белое') || t.contains('white')) return '🍷';
     if (t.contains('розовое') || t.contains('rose')) return '🌸';
     if (t.contains('красное') || t.contains('red wine')) return '🍷';
     if (t.contains('игристое') || t.contains('шампан') || t.contains('prosecco') || t.contains('cava')) return '🍾';

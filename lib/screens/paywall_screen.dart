@@ -62,9 +62,10 @@ class PaywallScreen extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
-            Padding(
-              // Нижний padding 160 — резервирует место под "Может быть позже"
-              // которая теперь рендерится в отдельном Positioned внизу stack'а.
+            // SingleChildScrollView защищает от overflow при увеличенном
+            // системном шрифте (MIUI/Android scale factor) — контент
+            // скроллится если не помещается, а не ломает layout.
+            SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 160),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -218,10 +219,11 @@ class PaywallScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Spacer(),
                   // Цена должна "дышать" — пользователь успевает осознать
                   // $9.99 как дешево прежде чем увидеть CTA-кнопку.
-                  const SizedBox(height: 20),
+                  // Spacer убран т.к. несовместим с SingleChildScrollView;
+                  // фиксированный отступ работает одинаково на всех экранах.
+                  const SizedBox(height: 40),
                   // Кнопка покупки (только haptic — RevenueCat не интегрирован).
                   // Уменьшена с 56 до 50 чтобы дать больше места "Может быть
                   // позже" подняться визуально вверх от gesture exclusion zone.

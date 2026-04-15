@@ -324,11 +324,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ),
           child: Row(
             children: [
+              // Для alcohol_to_food — один крупный эмодзи напитка на входе.
+              // Для food_to_alcohol — 3 эмодзи подобранных напитков в ряд:
+              // честный превью разнообразия категорий без тапа.
               Text(
                 item.mode == 'alcohol_to_food'
                     ? _drinkEmoji(item.dish)
-                    : (firstResult?.resolvedEmoji ?? '🍷'),
-                style: const TextStyle(fontSize: 32),
+                    : (item.results.isNotEmpty
+                        ? item.results.take(3).map((r) => r.resolvedEmoji).join(' ')
+                        : '🍷'),
+                style: TextStyle(fontSize: item.mode == 'alcohol_to_food' ? 32 : 20),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -343,9 +348,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      firstResult != null ? '${firstResult.alcoholType} · ${firstResult.brand}' : '',
+                      firstResult?.alcoholType ?? '',
                       style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
                       maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      firstResult?.brand ?? '',
+                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
