@@ -54,3 +54,8 @@ duet-landing/
 
 # Отладочные скрины (adb screencap для диагностики багов)
 debug_screenshots/
+
+# Android signing — ключи и пароли НЕ в git
+android/key.properties
+android/app/duet-upload.keystore
+android/.keystore_passwords_temp.txt

@@ -18,7 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   static const _bg = Color(0xFF0D0D0D);
   static const _card = Color(0xFF1A1A1A);
 
-  String _region = 'СНГ';
+  String _region = 'Другое';
   Set<String> _preferredTypes = {};
   String _detailLevel = 'standard';
   bool _loading = true;
@@ -30,7 +30,14 @@ class _ProfileScreenState extends State<ProfileScreen>
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnimation;
 
-  final _regions = ['СНГ', 'Россия', 'Казахстан', 'Украина', 'Беларусь'];
+  // Тот же расширенный список что в onboarding_screen.dart. Синхронизировать
+  // обе копии при добавлении новых стран.
+  final _regions = [
+    'Россия', 'Казахстан', 'Украина', 'Беларусь',
+    'Узбекистан', 'Кыргызстан', 'Таджикистан',
+    'Армения', 'Азербайджан', 'Грузия', 'Молдова',
+    'Другое',
+  ];
   final _alcoholTypes = [
     {'key': 'wine', 'label': 'Вино', 'emoji': '🍷'},
     {'key': 'whiskey', 'label': 'Виски', 'emoji': '🥃'},
@@ -70,7 +77,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _region = prefs.getString('region') ?? 'СНГ';
+      // "СНГ" в prefs — наследие старого списка. Мапим на "Другое" чтобы
+      // новая UI-категория отображалась как выбранная.
+      final saved = prefs.getString('region') ?? 'Другое';
+      _region = saved == 'СНГ' ? 'Другое' : saved;
       _preferredTypes = (prefs.getStringList('preferred_types') ?? []).toSet();
       _detailLevel = prefs.getString('detail_level') ?? 'standard';
       _loading = false;

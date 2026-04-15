@@ -30,10 +30,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   int _page = 0;
 
   // Третий слайд — состояние персонализации
-  String _region = 'СНГ';
+  String _region = 'Другое';
   final Set<String> _preferredTypes = {};
 
-  static const _regions = ['СНГ', 'Россия', 'Казахстан', 'Украина', 'Беларусь'];
+  // Расширенный список стран СНГ+ чтобы пользователь из Узбекистана/
+  // Кыргызстана/Армении сразу видел свою страну. "Другое" в конце — для всех
+  // кто вне СНГ. На бэке REGION_AVAILABILITY неизвестные регионы и "Другое"
+  // уходят в default (универсальный СНГ-список брендов).
+  static const _regions = [
+    'Россия', 'Казахстан', 'Украина', 'Беларусь',
+    'Узбекистан', 'Кыргызстан', 'Таджикистан',
+    'Армения', 'Азербайджан', 'Грузия', 'Молдова',
+    'Другое',
+  ];
   // Ключи строго совпадают с profile_screen.dart _alcoholTypes — иначе
   // выбор в онбординге не отображается потом в профиле как выбранный.
   // Это shared SharedPreferences key 'preferred_types', сравнение по
@@ -53,6 +62,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnimation;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Precache логотип слайда 1 — без этого первый декодинг PNG происходит
+    // в момент transition 1→2 и даёт frame drop. С precache картинка уже
+    // в GPU-памяти к моменту показа.
+    precacheImage(
+      const AssetImage('assets/splash/duet_logo_transparent.png'),
+      context,
+    );
+  }
 
   @override
   void initState() {
@@ -121,16 +142,21 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           children: [
             // Кнопка Пропустить — правый верхний угол. Доступна на ВСЕХ слайдах
             // включая последний — пользователь не должен быть заперт.
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: _finish,
-                child: Text(
-                  'Пропустить',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+            // +12px top padding от system bar (было 0, кнопка липла к часам).
+            // opacity 0.65 вместо 0.5 — контраст лучше, остаётся вторичной.
+            Padding(
+              padding: const EdgeInsets.only(top: 12, right: 12),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: TextButton(
+                  onPressed: _finish,
+                  child: Text(
+                    'Пропустить',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.65),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -199,21 +225,18 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
+          // Брендированный логотип Дуэт с прозрачным фоном (берем
+          // foreground adaptive-icon, у него alpha=0 в углах). Прежний
+          // duet_logo.png был непрозрачным PNG — давал квадратик на фоне.
+          Image.asset(
+            'assets/splash/duet_logo_transparent.png',
             width: 160,
             height: 160,
-            decoration: BoxDecoration(
-              color: _gold.withOpacity(0.10),
-              shape: BoxShape.circle,
-              border: Border.all(color: _gold.withOpacity(0.4), width: 2),
-            ),
-            child: const Center(
-              child: Text('🥂', style: TextStyle(fontSize: 80)),
-            ),
+            fit: BoxFit.contain,
           ),
           const SizedBox(height: 48),
           const Text(
-            'Идеальный напиток\nк каждому блюду',
+            'Идеальный напиток\nк любому блюду',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
@@ -225,7 +248,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ),
           const SizedBox(height: 14),
           Text(
-            'AI-эксперт. Подбираем за секунды.',
+            'AI подберет напиток за секунды',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white.withOpacity(0.55),
@@ -280,9 +303,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
           ),
           const SizedBox(height: 32),
+          // Компактные чипы для 12 регионов — padding 14x8 и fontSize 13
+          // вместо 18x12/15, чтобы весь список влез без скролла на 1080x2400.
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 8,
+            runSpacing: 8,
             alignment: WrapAlignment.center,
             children: _regions.map((r) {
               final selected = _region == r;
@@ -292,10 +317,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   setState(() => _region = r);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: selected ? _gold.withOpacity(0.15) : _card,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: selected ? _gold : Colors.white.withOpacity(0.08),
                       width: selected ? 1.5 : 1,
@@ -305,7 +330,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     r,
                     style: TextStyle(
                       color: selected ? _gold : Colors.white.withOpacity(0.85),
-                      fontSize: 15,
+                      fontSize: 13,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),

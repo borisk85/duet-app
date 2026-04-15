@@ -1,4 +1,4 @@
-package com.pairingapp.pairing_app
+package com.duetai.app
 
 import io.flutter.embedding.android.FlutterActivity
 

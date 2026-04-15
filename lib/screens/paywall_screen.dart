@@ -65,25 +65,22 @@ class PaywallScreen extends StatelessWidget {
             // SingleChildScrollView защищает от overflow при увеличенном
             // системном шрифте (MIUI/Android scale factor) — контент
             // скроллится если не помещается, а не ломает layout.
+            // bottom 200 — больше воздуха между CTA и "Может быть позже".
             SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 160),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 200),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 24),
-                  // Большая иконка
+                  // Брендированный логотип Дуэт вместо generic-эмодзи —
+                  // устанавливает визуальную связь "это Премиум Дуэт" и
+                  // согласован с иконкой приложения.
                   Center(
-                    child: Container(
-                      width: 88,
-                      height: 88,
-                      decoration: BoxDecoration(
-                        color: _gold.withOpacity(0.12),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: _gold.withOpacity(0.4), width: 2),
-                      ),
-                      child: const Center(
-                        child: Text('🥂', style: TextStyle(fontSize: 40)),
-                      ),
+                    child: Image.asset(
+                      'assets/splash/duet_logo.png',
+                      width: 96,
+                      height: 96,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -166,10 +163,10 @@ class PaywallScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _buildBenefit('Безлимитные подборки напитков и блюд'),
-                        _buildBenefit('Безлимитное избранное'),
-                        _buildBenefit('История подборок 30 дней (вместо 7)'),
-                        _buildBenefit('Экспертный режим с глубоким описанием'),
+                        _buildBenefit('Безлимитные подборки'),
+                        _buildBenefit('Избранное без ограничений'),
+                        _buildBenefit('История подборок за месяц'),
+                        _buildBenefit('Экспертный режим'),
                       ],
                     ),
                   ),
@@ -205,6 +202,8 @@ class PaywallScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        // +8px воздуха чтобы "Меньше $1 в месяц" не липла к цене.
+                        const SizedBox(height: 8),
                         // Якорная фраза для снятия возражения по цене —
                         // золотой цвет акцентирует выгоду, а не "примечание".
                         const Text(
@@ -223,7 +222,7 @@ class PaywallScreen extends StatelessWidget {
                   // $9.99 как дешево прежде чем увидеть CTA-кнопку.
                   // Spacer убран т.к. несовместим с SingleChildScrollView;
                   // фиксированный отступ работает одинаково на всех экранах.
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 56),
                   // Кнопка покупки (только haptic — RevenueCat не интегрирован).
                   // Уменьшена с 56 до 50 чтобы дать больше места "Может быть
                   // позже" подняться визуально вверх от gesture exclusion zone.
@@ -258,11 +257,11 @@ class PaywallScreen extends StatelessWidget {
             Positioned(
               left: 0,
               right: 0,
-              // bottom: 40 — опущена ниже от primary CTA для воздуха.
+              // bottom: 56 — больше воздуха от primary CTA (было 40).
               // С GestureDetector hit area работает и в gesture exclusion zone
               // потому что Positioned развязан от Column flow и явный
               // HitTestBehavior.opaque гарантирует обработку тапов.
-              bottom: 40,
+              bottom: 56,
               child: Center(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,

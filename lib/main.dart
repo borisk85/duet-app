@@ -263,6 +263,9 @@ class _MainNavigationState extends State<MainNavigation> {
           // сохраняет state вкладок (в том числе focus) — без unfocus возврат
           // на Подбор приводил к всплытию клавиатуры и прыжку кнопки вверх.
           FocusScope.of(context).unfocus();
+          // Guard: если тапнули на уже активную вкладку — выходим. Иначе
+          // epoch++ пересоздаёт экран через ValueKey и видно flicker.
+          if (_currentIndex == index) return;
           setState(() {
             if (index == 1) _favoritesEpoch++;
             if (index == 2) _historyEpoch++;
