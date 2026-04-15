@@ -167,10 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _isFoodToAlcohol
               ? 'Опишите подробнее — чем точнее, тем лучше подборка'
               : 'Укажите напиток — подберем закуски и блюда',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.35),
-            fontSize: 13,
-          ),
+          style: TextStyle(color: Colors.white.withOpacity(0.35), fontSize: 13),
         ),
       ],
     );
@@ -210,7 +207,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHints() {
     final hints = _isFoodToAlcohol
-        ? ['🥩 Говяжий стейк', '🍣 Суши', '🫕 Рамен с курицей', '🧀 Сырная тарелка']
+        ? [
+            '🥩 Говяжий стейк',
+            '🍣 Суши',
+            '🫕 Рамен с курицей',
+            '🧀 Сырная тарелка',
+          ]
         : ['🍷 Красное вино', '🥃 Виски', '🍺 Пиво', '🥂 Шампанское'];
 
     return Wrap(
@@ -286,9 +288,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         _budgetLabels[i],
                         style: TextStyle(
-                          color: selected ? _gold : Colors.white.withOpacity(0.4),
+                          color: selected
+                              ? _gold
+                              : Colors.white.withOpacity(0.4),
                           fontSize: 12,
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: selected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                     ],
@@ -310,7 +316,9 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Text(_isFoodToAlcohol ? 'Введите блюдо' : 'Введите напиток'),
           backgroundColor: Colors.red.shade800,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
         ),
       );
@@ -330,12 +338,12 @@ class _HomeScreenState extends State<HomeScreen> {
       await Navigator.push(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => ResultScreen(
+          pageBuilder: (_, _, _) => ResultScreen(
             dish: dish,
             mode: _isFoodToAlcohol ? 'food_to_alcohol' : 'alcohol_to_food',
             budget: _isFoodToAlcohol ? _budgetKeys[_budgetIndex] : 'medium',
           ),
-          transitionsBuilder: (_, animation, __, child) =>
+          transitionsBuilder: (_, animation, _, child) =>
               FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 220),
         ),
@@ -355,12 +363,18 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: _gold,
           foregroundColor: _bg,
           disabledBackgroundColor: _gold.withOpacity(0.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           elevation: 0,
         ),
         child: Text(
           _isFoodToAlcohol ? 'Подобрать напиток' : 'Подобрать блюда',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+          ),
         ),
       ),
     );

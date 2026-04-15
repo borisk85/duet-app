@@ -172,6 +172,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
+  String _foodEmoji(String dish) {
+    final d = dish.toLowerCase();
+    if (d.contains('пицц')) return '🍕';
+    if (d.contains('стейк') || d.contains('рибай')) return '🥩';
+    if (d.contains('бургер')) return '🍔';
+    if (d.contains('паст') || d.contains('спагетт')) return '🍝';
+    if (d.contains('суши') || d.contains('роллы') || d.contains('сашим')) return '🍣';
+    if (d.contains('рамен') || d.contains('лапш')) return '🍜';
+    if (d.contains('плов')) return '🥘';
+    if (d.contains('салат')) return '🥗';
+    if (d.contains('десерт') || d.contains('торт') || d.contains('шоколад')) return '🍰';
+    if (d.contains('суп') || d.contains('борщ') || d.contains('солян')) return '🍲';
+    if (d.contains('рыб') || d.contains('лосос') || d.contains('тунец')) return '🐟';
+    if (d.contains('устриц') || d.contains('морепродукт')) return '🦪';
+    if (d.contains('курица') || d.contains('цыпленок')) return '🍗';
+    if (d.contains('свинин') || d.contains('ребра')) return '🥓';
+    if (d.contains('котлет') || d.contains('фарш')) return '🍖';
+    if (d.contains('сыр')) return '🧀';
+    if (d.contains('овощ') || d.contains('гриль')) return '🥦';
+    return '🍽️';
+  }
+
   String _drinkEmoji(String drink) {
     final d = drink.toLowerCase();
     if (d.contains('белое') || d.contains('розовое') || d.contains('рислинг') || d.contains('шардоне') || d.contains('пино гриджо') || d.contains('совиньон блан')) return '🥂';
@@ -219,8 +241,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Text(
               item.mode == 'alcohol_to_food'
                   ? _drinkEmoji(item.dish)
-                  : (firstResult?.resolvedEmoji ?? '🍷'),
-              style: const TextStyle(fontSize: 28),
+                  : _foodEmoji(item.dish),
+              style: const TextStyle(fontSize: 26),
             ),
             const SizedBox(width: 12),
             Expanded(

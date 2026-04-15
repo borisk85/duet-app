@@ -43,7 +43,7 @@ class PairingResult {
     if (t.contains('игристое') || t.contains('шампан') || t.contains('prosecco') || t.contains('cava')) return '🍾';
     if (t.contains('виски') || t.contains('whisky') || t.contains('whiskey') || t.contains('коньяк') || t.contains('бренди')) return '🥃';
     if (t.contains('пиво') || t.contains('beer') || t.contains('lager') || t.contains('ale')) return '🍺';
-    if (t.contains('водка') || t.contains('vodka')) return '🫗';
+    if (t.contains('водка') || t.contains('vodka')) return '🥃';
     if (t.contains('джин') || t.contains('gin')) return '🌿';
     if (t.contains('ром') || t.contains('rum')) return '🍹';
     if (t.contains('текила') || t.contains('tequila')) return '🌵';

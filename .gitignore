@@ -51,3 +51,6 @@ lib/firebase_options.dart
 # Landing page (temporary coming soon, then full site) — отдельный Vercel проект,
 # не нужен в GitHub. Когда сделаем нормальный сайт, просто удалим папку.
 duet-landing/
+
+# Отладочные скрины (adb screencap для диагностики багов)
+debug_screenshots/
