@@ -18,7 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   static const _bg = Color(0xFF0D0D0D);
   static const _card = Color(0xFF1A1A1A);
 
-  String _region = 'Другое';
+  String _region = 'Другая страна';
   Set<String> _preferredTypes = {};
   String _detailLevel = 'standard';
   bool _loading = true;
@@ -34,9 +34,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   // обе копии при добавлении новых стран.
   final _regions = [
     'Россия', 'Казахстан', 'Украина', 'Беларусь',
-    'Узбекистан', 'Кыргызстан', 'Таджикистан',
+    'Узбекистан', 'Кыргызстан', 'Таджикистан', 'Туркменистан',
     'Армения', 'Азербайджан', 'Грузия', 'Молдова',
-    'Другое',
+    'Другая страна',
   ];
   final _alcoholTypes = [
     {'key': 'wine', 'label': 'Вино', 'emoji': '🍷'},
@@ -77,10 +77,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      // "СНГ" в prefs — наследие старого списка. Мапим на "Другое" чтобы
-      // новая UI-категория отображалась как выбранная.
-      final saved = prefs.getString('region') ?? 'Другое';
-      _region = saved == 'СНГ' ? 'Другое' : saved;
+      // "СНГ" (из оригинального списка) и "Другое" (из промежуточной версии)
+      // — наследие в prefs. Мапим оба на текущее "Другая страна".
+      final saved = prefs.getString('region') ?? 'Другая страна';
+      _region = (saved == 'СНГ' || saved == 'Другое') ? 'Другая страна' : saved;
       _preferredTypes = (prefs.getStringList('preferred_types') ?? []).toSet();
       _detailLevel = prefs.getString('detail_level') ?? 'standard';
       _loading = false;
