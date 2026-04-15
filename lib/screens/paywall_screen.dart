@@ -53,34 +53,31 @@ class PaywallScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // Кнопка закрытия в правом верхнем углу
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton(
-                icon: Icon(Icons.close_rounded, color: Colors.white.withOpacity(0.6), size: 28),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
             // SingleChildScrollView защищает от overflow при увеличенном
             // системном шрифте (MIUI/Android scale factor) — контент
             // скроллится если не помещается, а не ломает layout.
-            // bottom 200 — больше воздуха между CTA и "Может быть позже".
+            // bottom 200 — резервирует место под фиксированные CTA (bottom:110)
+            // и "Может быть позже" (bottom:40) которые лежат поверх в Stack.
+            // При длинном контенте он скроллится под CTA не наезжая визуально.
             SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 200),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 24),
-                  // Брендированный логотип Дуэт вместо generic-эмодзи —
-                  // устанавливает визуальную связь "это Премиум Дуэт" и
-                  // согласован с иконкой приложения.
+                  // Оригинальный duet_logo.png (тёмно-серый фон squircle
+                  // с золотой иконкой в центре) в ClipRRect — убирает
+                  // острые углы, иконка занимает всю ширину без safe-area
+                  // потерь foreground-варианта. 112x112 крупнее чем 96.
                   Center(
-                    child: Image.asset(
-                      'assets/splash/duet_logo.png',
-                      width: 96,
-                      height: 96,
-                      fit: BoxFit.contain,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(28),
+                      child: Image.asset(
+                        'assets/splash/duet_logo.png',
+                        width: 112,
+                        height: 112,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -114,7 +111,7 @@ class PaywallScreen extends StatelessWidget {
                                 style: const TextStyle(color: _goldText, fontWeight: FontWeight.w600),
                               ),
                               const TextSpan(
-                                text: ' доступен только в Premium. Оформите подписку и получите доступ ко всем возможностям.',
+                                text: ' доступен только в Premium. Разблокируйте полный функционал приложения.',
                               ),
                             ],
                           )
@@ -148,19 +145,15 @@ class PaywallScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: const [
-                            Text('⚡', style: TextStyle(fontSize: 18)),
-                            SizedBox(width: 8),
-                            Text(
-                              'Дуэт Premium',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
+                        // Молния ⚡ убрана — бренд не нуждается в декоре.
+                        // Текст прижимается к левому краю как галочки ниже.
+                        const Text(
+                          'Дуэт Premium',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         _buildBenefit('Безлимитные подборки'),
@@ -220,30 +213,34 @@ class PaywallScreen extends StatelessWidget {
                   ),
                   // Цена должна "дышать" — пользователь успевает осознать
                   // $9.99 как дешево прежде чем увидеть CTA-кнопку.
-                  // Spacer убран т.к. несовместим с SingleChildScrollView;
-                  // фиксированный отступ работает одинаково на всех экранах.
-                  const SizedBox(height: 56),
-                  // Кнопка покупки (только haptic — RevenueCat не интегрирован).
-                  // Уменьшена с 56 до 50 чтобы дать больше места "Может быть
-                  // позже" подняться визуально вверх от gesture exclusion zone.
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () => HapticFeedback.mediumImpact(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _goldCta,
-                        foregroundColor: _bg,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Перейти на Premium',
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: 0.3),
-                      ),
-                    ),
-                  ),
                 ],
+              ),
+            ),
+            // CTA-кнопка вынесена из Column в Positioned — фиксированная
+            // позиция снизу. Внутри Column padding bottom не "поднимал" её
+            // относительно экрана, кнопка наезжала на "Может быть позже".
+            // Теперь CTA на bottom: 110, "Может быть позже" на bottom: 40 →
+            // гарантированный визуальный разрыв 60+px на любом размере.
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 100,
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () => HapticFeedback.mediumImpact(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _goldCta,
+                    foregroundColor: _bg,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Перейти на Premium',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: 0.3),
+                  ),
+                ),
               ),
             ),
             // "Может быть позже" — отдельный Positioned внизу Stack.
@@ -257,11 +254,9 @@ class PaywallScreen extends StatelessWidget {
             Positioned(
               left: 0,
               right: 0,
-              // bottom: 56 — больше воздуха от primary CTA (было 40).
-              // С GestureDetector hit area работает и в gesture exclusion zone
-              // потому что Positioned развязан от Column flow и явный
-              // HitTestBehavior.opaque гарантирует обработку тапов.
-              bottom: 56,
+              // bottom: 40 — "Может быть позже" под CTA (которая на 110).
+              // Разрыв ~50-60px между нижним краем CTA и верхом текста.
+              bottom: 40,
               child: Center(
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -280,6 +275,17 @@ class PaywallScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
+            ),
+            // Крестик закрытия — ПОСЛЕДНИМ в Stack чтобы быть поверх
+            // SingleChildScrollView. Раньше он был первым, SCV перехватывал
+            // hit-test и тап по крестику не срабатывал.
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: Icon(Icons.close_rounded, color: Colors.white.withOpacity(0.6), size: 28),
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ),
           ],

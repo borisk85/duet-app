@@ -32,6 +32,13 @@ void main() async {
       statusBarIconBrightness: Brightness.light,
     ),
   );
+  // Phone-first app — блокируем landscape. Все экраны (paywall, онбординг,
+  // результаты с длинным текстом) сверстаны под portrait 9:19+. В landscape
+  // верстка ломается, а юзеры приложения (выбор в магазине/ресторане) всегда
+  // в portrait. Адаптация под landscape — отдельная задача на будущее.
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
