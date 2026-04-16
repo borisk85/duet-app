@@ -206,6 +206,13 @@ class _SplashScreenState extends State<_SplashScreen>
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
 
+  static _MainNavigationState? _instance;
+
+  /// Переключает вкладку из любого экрана (например ResultScreen).
+  static void switchTab(int index) {
+    _instance?._switchToTab(index);
+  }
+
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
@@ -218,6 +225,28 @@ class _MainNavigationState extends State<MainNavigation> {
 
   static const _gold = Color(0xFFC9A84C);
   static const _bg = Color(0xFF0D0D0D);
+
+  @override
+  void initState() {
+    super.initState();
+    MainNavigation._instance = this;
+  }
+
+  @override
+  void dispose() {
+    if (MainNavigation._instance == this) MainNavigation._instance = null;
+    super.dispose();
+  }
+
+  void _switchToTab(int index) {
+    if (_currentIndex == index) return;
+    setState(() {
+      if (index == 1) _favoritesEpoch++;
+      if (index == 2) _historyEpoch++;
+      if (index == 3) _profileEpoch++;
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

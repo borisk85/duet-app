@@ -13,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   bool _isFoodToAlcohol = true;
   // Инициализируем синхронно из top-level initialBudgetKey (прогружено в main()
   // до runApp) — без мелькания с дефолта "Средний" на сохраненное значение.
@@ -40,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -109,12 +111,18 @@ class _HomeScreenState extends State<HomeScreen> {
           _toggleOption(
             label: 'Еда → Напиток',
             selected: _isFoodToAlcohol,
-            onTap: () => setState(() => _isFoodToAlcohol = true),
+            onTap: () => setState(() {
+              _isFoodToAlcohol = true;
+              _controller.clear();
+            }),
           ),
           _toggleOption(
             label: 'Напиток → Еда',
             selected: !_isFoodToAlcohol,
-            onTap: () => setState(() => _isFoodToAlcohol = false),
+            onTap: () => setState(() {
+              _isFoodToAlcohol = false;
+              _controller.clear();
+            }),
           ),
         ],
       ),
@@ -187,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: TextField(
         controller: _controller,
+        focusNode: _focusNode,
         style: const TextStyle(color: Colors.white, fontSize: 15),
         maxLines: 4,
         minLines: 4,
@@ -350,7 +359,11 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    if (mounted) setState(() => _navigating = false);
+    // Снимаем фокус после возврата — юзер не обязательно хочет редактировать.
+    if (mounted) {
+      _focusNode.unfocus();
+      setState(() => _navigating = false);
+    }
   }
 
   Widget _buildButton() {

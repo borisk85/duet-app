@@ -600,7 +600,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Row(
             children: [
-              const Text('⚡', style: TextStyle(fontSize: 20)),
+              Text(_isPremium ? '⚡' : '🎯', style: const TextStyle(fontSize: 20)),
               const SizedBox(width: 8),
               Text(
                 _isPremium ? 'Premium' : 'Бесплатный план',
@@ -638,15 +638,33 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              left > 0 ? _pairingsLeftText(left) : 'Лимит исчерпан — перейдите на Premium',
-              style: TextStyle(
-                // Золотой на исчерпанном лимите = CTA-цвет, не тревога.
-                color: left > 0 ? Colors.white.withOpacity(0.35) : _gold,
-                fontSize: 12,
-                fontWeight: left > 0 ? FontWeight.w400 : FontWeight.w600,
-              ),
-            ),
+            left > 0
+                ? Text(
+                    _pairingsLeftText(left),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.35),
+                      fontSize: 12,
+                    ),
+                  )
+                : GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PaywallScreen(dish: '', mode: '', feature: 'Premium')),
+                      );
+                    },
+                    child: const Text(
+                      'Лимит исчерпан — перейдите на Premium',
+                      style: TextStyle(
+                        color: _gold,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: _gold,
+                      ),
+                    ),
+                  ),
           ],
         ],
       ),

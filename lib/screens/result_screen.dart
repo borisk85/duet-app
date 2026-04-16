@@ -13,6 +13,7 @@ import '../models/pairing_result.dart';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'paywall_screen.dart';
+import '../main.dart';
 
 class ResultScreen extends StatefulWidget {
   // Для истории / избранного — уже готовый ответ
@@ -225,6 +226,7 @@ class _ResultScreenState extends State<ResultScreen>
     return Scaffold(
       backgroundColor: _bg,
       appBar: _buildAppBar(context),
+      bottomNavigationBar: _buildBottomNav(context),
       body: Stack(
         children: [
           ListView(
@@ -245,7 +247,8 @@ class _ResultScreenState extends State<ResultScreen>
                   (e) => _buildResultCard(e.key + 1, e.value),
                 )),
                 const SizedBox(height: 24),
-                _buildSaveButton(context),
+                if (_isSavedChecked || widget.response == null)
+                  _buildSaveButton(context),
               ],
               const SizedBox(height: 16),
               SizedBox(height: MediaQuery.of(context).padding.bottom),
@@ -392,6 +395,57 @@ class _ResultScreenState extends State<ResultScreen>
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNav(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF111111),
+        border: Border(
+          top: BorderSide(color: Colors.white.withOpacity(0.07), width: 1),
+        ),
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              _navItem(context, index: 0, icon: Icons.search_rounded, label: 'Подбор'),
+              _navItem(context, index: 1, icon: Icons.star_rounded, label: 'Избранное'),
+              _navItem(context, index: 2, icon: Icons.history_rounded, label: 'История'),
+              _navItem(context, index: 3, icon: Icons.person_rounded, label: 'Профиль'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(BuildContext context, {required int index, required IconData icon, required String label}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          MainNavigation.switchTab(index);
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24, color: Colors.white.withOpacity(0.5)),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.white.withOpacity(0.5),
               ),
             ),
           ],
