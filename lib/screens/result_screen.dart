@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,63 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'paywall_screen.dart';
 import '../main.dart';
+
+/// Top-level функция для compute() — парсит JSON стрима в isolate.
+/// Принимает сырую строку от API, возвращает Map с results или error.
+List<Map<String, dynamic>> _parseStreamResponse(String raw) {
+  // Убираем markdown-обертку
+  if (raw.startsWith('```')) {
+    final firstNewline = raw.indexOf('\n');
+    if (firstNewline != -1) {
+      raw = raw.substring(firstNewline + 1);
+    }
+    final closingTicks = raw.lastIndexOf('```');
+    if (closingTicks != -1) {
+      raw = raw.substring(0, closingTicks);
+    }
+    raw = raw.trim();
+  }
+
+  // Парсим JSON с fallback
+  dynamic data;
+  try {
+    data = jsonDecode(raw);
+  } on FormatException {
+    final first = raw.indexOf('{');
+    final last = raw.lastIndexOf('}');
+    if (first != -1 && last > first) {
+      try {
+        data = jsonDecode(raw.substring(first, last + 1));
+      } on FormatException {
+        throw Exception(
+          'Не удалось распознать блюдо. Попробуйте уточнить название или выбрать другое.',
+        );
+      }
+    } else {
+      throw Exception(
+        'Не удалось распознать блюдо. Попробуйте уточнить название или выбрать другое.',
+      );
+    }
+  }
+
+  // Проверка error от Claude
+  if (data is Map && data['error'] != null) {
+    throw Exception(data['error'].toString());
+  }
+
+  // Чистим brand: убираем скобки и альтернативы
+  final resultsList = (data['results'] as List).cast<Map<String, dynamic>>();
+  for (final r in resultsList) {
+    if (r['brand'] is String) {
+      var brand = r['brand'] as String;
+      brand = brand.replaceAll(RegExp(r'\s*\([^)]*\)'), '');
+      brand = brand.split(RegExp(r'\s+(?:или|/|,|\sлибо\s|\s—\s)')).first;
+      r['brand'] = brand.trim();
+    }
+  }
+
+  return resultsList.take(3).toList();
+}
 
 class ResultScreen extends StatefulWidget {
   // Для истории / избранного — уже готовый ответ
@@ -110,72 +168,11 @@ class _ResultScreenState extends State<ResultScreen>
         buffer.write(chunk);
       }
 
-      var raw = buffer.toString().trim();
+      final raw = buffer.toString().trim();
 
-      // Убираем markdown-обертку ДО парсинга — Claude иногда оборачивает JSON в ```json.
-      // Защита от RangeError: lastIndexOf возвращает -1 если закрывающих ``` нет
-      // (Claude обрезан по max_tokens или просто не поставил закрытие), и тогда
-      // substring(0, -1) падал с RangeError Invalid value 0..N: -1.
-      if (raw.startsWith('```')) {
-        final firstNewline = raw.indexOf('\n');
-        if (firstNewline != -1) {
-          raw = raw.substring(firstNewline + 1);
-        }
-        final closingTicks = raw.lastIndexOf('```');
-        if (closingTicks != -1) {
-          raw = raw.substring(0, closingTicks);
-        }
-        raw = raw.trim();
-      }
+      // Парсинг JSON + regex-чистка brand в отдельном isolate
+      final resultsList = await compute(_parseStreamResponse, raw);
 
-      // Парсим JSON. Если Claude вернул свободный текст (невалидный запрос,
-      // где модель проигнорировала инструкцию про error-JSON) — ловим
-      // FormatException и показываем понятное сообщение вместо техническое.
-      // Fallback: иногда модель оборачивает валидный JSON пояснительным prose
-      // ("Вот ваш подбор: {...} спасибо"). Извлекаем substring между первой
-      // `{` и последней `}` и парсим повторно — спасает от ложных "не
-      // распознано" на валидных блюдах типа "рибай", "стейки рибай".
-      dynamic data;
-      try {
-        data = jsonDecode(raw);
-      } on FormatException {
-        final first = raw.indexOf('{');
-        final last = raw.lastIndexOf('}');
-        if (first != -1 && last > first) {
-          try {
-            data = jsonDecode(raw.substring(first, last + 1));
-          } on FormatException {
-            throw Exception(
-              'Не удалось распознать блюдо. Попробуйте уточнить название или выбрать другое.',
-            );
-          }
-        } else {
-          throw Exception(
-            'Не удалось распознать блюдо. Попробуйте уточнить название или выбрать другое.',
-          );
-        }
-      }
-
-      // Claude вернул поле error — невалидный запрос (корм для животных,
-      // бессмыслица, оскорбления). Показываем текст error как user message.
-      if (data is Map && data['error'] != null) {
-        throw Exception(data['error'].toString());
-      }
-
-      // Защитный слой на brand: срезаем скобки со страной "(Германия)" и
-      // любые trailing альтернативы ("X или Y", "X / Y"). Бэкенд делает то же
-      // самое при сохранении, но кеш может содержать старые записи — чистим
-      // на всякий случай и на фронте. Цель — чтобы ссылка в Kaspi/Magnum была
-      // чистая и магазин находил товар.
-      final resultsList = (data['results'] as List);
-      for (final r in resultsList) {
-        if (r is Map && r['brand'] is String) {
-          var brand = r['brand'] as String;
-          brand = brand.replaceAll(RegExp(r'\s*\([^)]*\)'), '');
-          brand = brand.split(RegExp(r'\s+(?:или|/|,|\sлибо\s|\s—\s)')).first;
-          r['brand'] = brand.trim();
-        }
-      }
       final prefs = await SharedPreferences.getInstance();
       final region = prefs.getString('region') ?? 'СНГ';
 
@@ -184,10 +181,7 @@ class _ResultScreenState extends State<ResultScreen>
         mode: widget.mode!,
         budget: widget.budget!,
         region: region,
-        results: (data['results'] as List)
-            .take(3)
-            .map((r) => PairingResult.fromJson(r))
-            .toList(),
+        results: resultsList.map((r) => PairingResult.fromJson(r)).toList(),
         createdAt: DateTime.now(),
       );
 
