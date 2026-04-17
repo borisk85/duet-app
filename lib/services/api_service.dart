@@ -17,6 +17,9 @@ class PairingLimitException implements Exception {
 class ApiService {
   static const String _baseUrl = 'https://duet-app-production.up.railway.app';
 
+  /// Singleton HTTP client — переиспользует TCP+TLS соединения между запросами.
+  static final http.Client _client = http.Client();
+
   static Future<Map<String, String>> _headers() async {
     final token = await AuthService.getIdToken();
     return {
@@ -38,37 +41,31 @@ class ApiService {
     final preferences = prefs.getStringList('preferred_types') ?? [];
     final headers = await _headers();
 
-    final client = http.Client();
-    try {
-      final request = http.Request('POST', Uri.parse('$_baseUrl/pair/stream'));
-      request.headers.addAll(headers);
-      request.body = jsonEncode({
-        'dish': dish,
-        'mode': mode,
-        'budget': budget,
-        'region': region,
-        'detail_level': detailLevel,
-        'preferences': preferences,
-      });
+    final request = http.Request('POST', Uri.parse('$_baseUrl/pair/stream'));
+    request.headers.addAll(headers);
+    request.body = jsonEncode({
+      'dish': dish,
+      'mode': mode,
+      'budget': budget,
+      'region': region,
+      'detail_level': detailLevel,
+      'preferences': preferences,
+    });
 
-      final streamed = await client.send(request).timeout(const Duration(seconds: 30));
+    final streamed = await _client.send(request).timeout(const Duration(seconds: 30));
 
-      if (streamed.statusCode == 429) {
-        // Специальный exception — ResultScreen перехватит и редиректнет на Paywall
-        throw const PairingLimitException();
-      }
-      if (streamed.statusCode == 401) {
-        throw Exception('Ошибка авторизации. Попробуйте выйти и войти снова.');
-      }
-      if (streamed.statusCode != 200) {
-        throw Exception('Сервис временно недоступен. Попробуйте через минуту.');
-      }
+    if (streamed.statusCode == 429) {
+      throw const PairingLimitException();
+    }
+    if (streamed.statusCode == 401) {
+      throw Exception('Ошибка авторизации. Попробуйте выйти и войти снова.');
+    }
+    if (streamed.statusCode != 200) {
+      throw Exception('Сервис временно недоступен. Попробуйте через минуту.');
+    }
 
-      await for (final chunk in streamed.stream.transform(utf8.decoder)) {
-        yield chunk;
-      }
-    } finally {
-      client.close();
+    await for (final chunk in streamed.stream.transform(utf8.decoder)) {
+      yield chunk;
     }
   }
 
@@ -76,7 +73,7 @@ class ApiService {
 
   static Future<List<PairingResponse>> getHistory() async {
     final headers = await _headers();
-    final response = await http
+    final response = await _client
         .get(Uri.parse('$_baseUrl/history'), headers: headers)
         .timeout(const Duration(seconds: 15));
 
@@ -88,7 +85,7 @@ class ApiService {
   static Future<bool> clearHistory() async {
     final headers = await _headers();
     try {
-      final res = await http
+      final res = await _client
           .delete(Uri.parse('$_baseUrl/history'), headers: headers)
           .timeout(const Duration(seconds: 15));
       return res.statusCode == 200;
@@ -101,7 +98,7 @@ class ApiService {
 
   static Future<List<PairingResponse>> getFavorites() async {
     final headers = await _headers();
-    final response = await http
+    final response = await _client
         .get(Uri.parse('$_baseUrl/favorites'), headers: headers)
         .timeout(const Duration(seconds: 15));
 
@@ -112,7 +109,7 @@ class ApiService {
 
   static Future<bool> saveFavorite(PairingResponse response) async {
     final headers = await _headers();
-    final res = await http
+    final res = await _client
         .post(
           Uri.parse('$_baseUrl/favorites'),
           headers: headers,
@@ -136,7 +133,7 @@ class ApiService {
 
   static Future<void> removeFavorite(int id) async {
     final headers = await _headers();
-    await http
+    await _client
         .delete(Uri.parse('$_baseUrl/favorites/$id'), headers: headers)
         .timeout(const Duration(seconds: 15));
   }
@@ -146,7 +143,7 @@ class ApiService {
   static Future<Map<String, dynamic>?> getMe() async {
     final headers = await _headers();
     try {
-      final response = await http
+      final response = await _client
           .get(Uri.parse('$_baseUrl/me'), headers: headers)
           .timeout(const Duration(seconds: 10));
       if (response.statusCode != 200) return null;
