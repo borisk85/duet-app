@@ -75,20 +75,27 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getStringList(_historyKey) ?? [];
     final cutoff = DateTime.now().subtract(const Duration(days: _historyDays));
-    final valid = raw.where((s) {
+
+    // Декодируем каждую запись ОДИН раз, фильтруем и маппим из уже разобранных данных
+    final decoded = <MapEntry<String, Map<String, dynamic>>>[];
+    for (final s in raw) {
       try {
-        final data = jsonDecode(s);
+        final data = jsonDecode(s) as Map<String, dynamic>;
         final date = DateTime.parse(data['created_at'] ?? '');
-        return date.isAfter(cutoff);
+        if (date.isAfter(cutoff)) {
+          decoded.add(MapEntry(s, data));
+        }
       } catch (_) {
-        return false;
+        // Битая запись — пропускаем
       }
-    }).toList();
-    // Если были удалены просроченные — сохраняем обновленный список
-    if (valid.length != raw.length) {
-      await prefs.setStringList(_historyKey, valid);
     }
-    return valid.map((s) => PairingResponse.fromJson(jsonDecode(s))).toList();
+
+    // Если были удалены просроченные — сохраняем обновленный список
+    if (decoded.length != raw.length) {
+      await prefs.setStringList(_historyKey, decoded.map((e) => e.key).toList());
+    }
+
+    return decoded.map((e) => PairingResponse.fromJson(e.value)).toList();
   }
 
   static Future<void> clearHistory() async {
