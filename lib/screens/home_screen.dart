@@ -382,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
           elevation: 0,
         ),
         child: Text(
-          _isFoodToAlcohol ? 'Подобрать напиток' : 'Подобрать блюда',
+          _isFoodToAlcohol ? 'Подобрать напитки' : 'Подобрать блюда',
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
