@@ -1,3 +1,4 @@
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/material.dart';
 import '../models/pairing_result.dart';
 import '../services/api_service.dart';
@@ -25,7 +26,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _load() async {
+    final trace = FirebasePerformance.instance.newTrace('history_load');
+    await trace.start();
     final data = await ApiService.getHistory();
+    trace.setMetric('item_count', data.length);
+    await trace.stop();
     setState(() {
       _history = data;
       _loading = false;

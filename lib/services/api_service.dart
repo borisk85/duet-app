@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/pairing_result.dart';
@@ -19,6 +20,32 @@ class ApiService {
 
   /// Singleton HTTP client — переиспользует TCP+TLS соединения между запросами.
   static final http.Client _client = http.Client();
+
+  static final FirebasePerformance _perf = FirebasePerformance.instance;
+
+  /// Выполняет HTTP-запрос с автоматическим сбором метрик Firebase Performance.
+  static Future<http.Response> _traced(
+    String method,
+    String path,
+    Future<http.Response> Function() request,
+  ) async {
+    final metric = _perf.newHttpMetric(
+      '$_baseUrl$path',
+      method == 'GET' ? HttpMethod.Get
+          : method == 'POST' ? HttpMethod.Post
+          : method == 'DELETE' ? HttpMethod.Delete
+          : HttpMethod.Get,
+    );
+    await metric.start();
+    try {
+      final response = await request();
+      metric.httpResponseCode = response.statusCode;
+      metric.responsePayloadSize = response.contentLength;
+      return response;
+    } finally {
+      await metric.stop();
+    }
+  }
 
   static Future<Map<String, String>> _headers() async {
     final token = await AuthService.getIdToken();
@@ -73,9 +100,9 @@ class ApiService {
 
   static Future<List<PairingResponse>> getHistory() async {
     final headers = await _headers();
-    final response = await _client
-        .get(Uri.parse('$_baseUrl/history'), headers: headers)
-        .timeout(const Duration(seconds: 15));
+    final response = await _traced('GET', '/history', () =>
+        _client.get(Uri.parse('$_baseUrl/history'), headers: headers)
+            .timeout(const Duration(seconds: 15)));
 
     if (response.statusCode != 200) return [];
     final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -98,9 +125,9 @@ class ApiService {
 
   static Future<List<PairingResponse>> getFavorites() async {
     final headers = await _headers();
-    final response = await _client
-        .get(Uri.parse('$_baseUrl/favorites'), headers: headers)
-        .timeout(const Duration(seconds: 15));
+    final response = await _traced('GET', '/favorites', () =>
+        _client.get(Uri.parse('$_baseUrl/favorites'), headers: headers)
+            .timeout(const Duration(seconds: 15)));
 
     if (response.statusCode != 200) return [];
     final List<dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -109,19 +136,16 @@ class ApiService {
 
   static Future<bool> saveFavorite(PairingResponse response) async {
     final headers = await _headers();
-    final res = await _client
-        .post(
-          Uri.parse('$_baseUrl/favorites'),
-          headers: headers,
-          body: jsonEncode({
-            'dish': response.dish,
-            'mode': response.mode,
-            'budget': response.budget,
-            'region': response.region,
-            'results': response.results.map((r) => r.toJson()).toList(),
-          }),
-        )
-        .timeout(const Duration(seconds: 15));
+    final body = jsonEncode({
+      'dish': response.dish,
+      'mode': response.mode,
+      'budget': response.budget,
+      'region': response.region,
+      'results': response.results.map((r) => r.toJson()).toList(),
+    });
+    final res = await _traced('POST', '/favorites', () =>
+        _client.post(Uri.parse('$_baseUrl/favorites'), headers: headers, body: body)
+            .timeout(const Duration(seconds: 15)));
 
     if (res.statusCode == 429) {
       throw Exception('Лимит 10 избранных для Free. Перейдите на Premium.');
@@ -143,9 +167,9 @@ class ApiService {
   static Future<Map<String, dynamic>?> getMe() async {
     final headers = await _headers();
     try {
-      final response = await _client
-          .get(Uri.parse('$_baseUrl/me'), headers: headers)
-          .timeout(const Duration(seconds: 10));
+      final response = await _traced('GET', '/me', () =>
+          _client.get(Uri.parse('$_baseUrl/me'), headers: headers)
+              .timeout(const Duration(seconds: 10)));
       if (response.statusCode != 200) return null;
       return jsonDecode(utf8.decode(response.bodyBytes));
     } catch (_) {

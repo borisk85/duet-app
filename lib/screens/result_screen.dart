@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -158,6 +159,8 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Future<void> _startStream() async {
+    final trace = FirebasePerformance.instance.newTrace('ai_pairing_request');
+    await trace.start();
     final buffer = StringBuffer();
     try {
       await for (final chunk in ApiService.pairStream(
@@ -187,6 +190,10 @@ class _ResultScreenState extends State<ResultScreen>
 
       await StorageService.saveToHistory(response);
 
+      trace.putAttribute('mode', widget.mode!);
+      trace.putAttribute('status', 'success');
+      await trace.stop();
+
       if (mounted) {
         setState(() {
           _response = response;
@@ -194,9 +201,8 @@ class _ResultScreenState extends State<ResultScreen>
         });
       }
     } on PairingLimitException catch (_) {
-      // Лимит подборок исчерпан — редиректим на Paywall с персонализацией.
-      // pushReplacement чтобы пользователь не мог вернуться кнопкой "Назад"
-      // на пустой экран загрузки.
+      trace.putAttribute('status', 'limit_reached');
+      await trace.stop();
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -206,6 +212,8 @@ class _ResultScreenState extends State<ResultScreen>
         );
       }
     } catch (e) {
+      trace.putAttribute('status', 'error');
+      await trace.stop();
       if (mounted) {
         setState(() {
           _error = e.toString().replaceAll('Exception: ', '');
