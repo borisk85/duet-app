@@ -680,7 +680,9 @@ async def pair_stream(request: Request, req: PairRequest):
                     accumulated += text
                     yield text
         except Exception as e:
-            yield json.dumps({"error": str(e)})
+            import traceback
+            traceback.print_exc()
+            yield json.dumps({"error": "Сервис временно недоступен. Попробуйте через минуту."})
             return
 
         try:
