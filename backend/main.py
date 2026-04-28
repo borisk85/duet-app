@@ -95,7 +95,7 @@ FREE_LIMIT = 10
 # Версия промпта — инкрементируется при любом значимом изменении EXPERT_ROLE /
 # правил в _build_prompt. Включается в cache_key и делает старый кеш
 # невалидным автоматически, без ручной очистки БД/in-memory.
-PROMPT_VERSION = 5
+PROMPT_VERSION = 6
 
 # ── БД (psycopg2 thread pool) ─────────────────────────────────────────────────
 _pool: psycopg2.pool.ThreadedConnectionPool | None = None
@@ -1121,6 +1121,15 @@ async def pair_stream(request: Request, req: PairRequest):
                     v = r.get(field)
                     if isinstance(v, str):
                         r[field] = v.replace("\u0451", "\u0435").replace("\u0401", "\u0415")
+                # \u041a\u0430\u043f\u0438\u0442\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u043f\u0435\u0440\u0432\u043e\u0439 \u0431\u0443\u043a\u0432\u044b \u0434\u043b\u044f \u043f\u043e\u043b\u0435\u0439-\u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0439. Claude \u0438\u043d\u043e\u0433\u0434\u0430
+                # \u0432\u043e\u0437\u0432\u0440\u0430\u0449\u0430\u0435\u0442 \u0441\u043e\u0432\u0435\u0442/\u043e\u0431\u043e\u0441\u043d\u043e\u0432\u0430\u043d\u0438\u0435 \u0441\u043e \u0441\u0442\u0440\u043e\u0447\u043d\u043e\u0439 ("\u043f\u043e\u0434\u0430\u0432\u0430\u0439 \u043a\u043e\u043c\u043d\u0430\u0442\u043d\u043e\u0439...").
+                # brand \u0438 price_range \u043d\u0435 \u0442\u0440\u043e\u0433\u0430\u0435\u043c \u2014 \u0442\u0430\u043c \u043e\u0440\u0438\u0433\u0438\u043d\u0430\u043b\u044c\u043d\u044b\u0439 \u0440\u0435\u0433\u0438\u0441\u0442\u0440 \u0438 \u0447\u0438\u0441\u043b\u0430.
+                for field in ("alcohol_type", "name", "reason", "serving_tip", "why_it_works"):
+                    v = r.get(field)
+                    if isinstance(v, str) and v:
+                        s = v.lstrip()
+                        if s and s[0].islower():
+                            r[field] = s[0].upper() + s[1:]
             result = {"dish": req.dish, "mode": req.mode, "budget": req.budget, "region": req.region, "results": results}
             _cache_set(cache_key, result)
 

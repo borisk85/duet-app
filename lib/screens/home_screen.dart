@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late int _budgetIndex = _initialBudgetIndex();
   bool _navigating = false;
 
-  static const _budgetLabels = ['Бюджетно', 'Средний', 'Премиум'];
+  static const _budgetLabels = ['Эконом', 'Средний', 'Премиум'];
   static const _budgetIcons = ['💰', '💰💰', '💰💰💰'];
   static const _budgetKeys = ['budget', 'medium', 'premium'];
 
@@ -257,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Бюджет',
+          'Сегмент',
           style: TextStyle(
             color: Colors.white.withOpacity(0.5),
             fontSize: 13,

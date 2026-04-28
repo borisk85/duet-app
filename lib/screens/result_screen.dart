@@ -614,7 +614,7 @@ class _ResultScreenState extends State<ResultScreen>
                     ),
                     child: Text(
                       budget == 'budget'
-                          ? '💰 Бюджетно'
+                          ? '💰 Эконом'
                           : budget == 'premium'
                           ? '💰💰💰 Премиум'
                           : '💰💰 Средний',
