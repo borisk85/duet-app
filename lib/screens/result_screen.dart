@@ -987,28 +987,33 @@ class _ResultScreenState extends State<ResultScreen>
                 ),
                 const SizedBox(height: 6),
               ],
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 110),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    result.priceRange,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 12,
+              // Цена скрывается если пустая — в режиме Напиток→Еда мы не
+              // выводим фантазийную цену для блюд (нет источника правды
+              // для региональных цен в доставке). Реальную цену юзер
+              // увидит при тапе "Заказать".
+              if (result.priceRange.isNotEmpty)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 110),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      result.priceRange,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],
