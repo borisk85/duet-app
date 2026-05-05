@@ -60,3 +60,23 @@ debug_screenshots/
 android/key.properties
 android/app/duet-upload.keystore
 android/.keystore_passwords_temp.txt
+android/local.properties
+android/.gradle/
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+GoogleService-Info.plist
+
+# Python
+__pycache__/
+.venv/
+venv/
+
+# Secrets / keys / certs
+*.key
+*.pem
+secrets/
+
+# Flutter
+.flutter-plugins
