@@ -151,11 +151,12 @@ class _ResultScreenState extends State<ResultScreen>
     final saved = favorites.any(
       (f) => f.dish == _response!.dish && f.budget == _response!.budget,
     );
-    if (mounted)
+    if (mounted) {
       setState(() {
         _isSaved = saved;
         _isSavedChecked = true;
       });
+    }
   }
 
   Future<void> _startStream() async {
@@ -418,10 +419,30 @@ class _ResultScreenState extends State<ResultScreen>
           height: 60,
           child: Row(
             children: [
-              _navItem(context, index: 0, icon: Icons.search_rounded, label: 'Подбор'),
-              _navItem(context, index: 1, icon: Icons.star_rounded, label: 'Избранное'),
-              _navItem(context, index: 2, icon: Icons.history_rounded, label: 'История'),
-              _navItem(context, index: 3, icon: Icons.person_rounded, label: 'Профиль'),
+              _navItem(
+                context,
+                index: 0,
+                icon: Icons.search_rounded,
+                label: 'Подбор',
+              ),
+              _navItem(
+                context,
+                index: 1,
+                icon: Icons.star_rounded,
+                label: 'Избранное',
+              ),
+              _navItem(
+                context,
+                index: 2,
+                icon: Icons.history_rounded,
+                label: 'История',
+              ),
+              _navItem(
+                context,
+                index: 3,
+                icon: Icons.person_rounded,
+                label: 'Профиль',
+              ),
             ],
           ),
         ),
@@ -429,7 +450,12 @@ class _ResultScreenState extends State<ResultScreen>
     );
   }
 
-  Widget _navItem(BuildContext context, {required int index, required IconData icon, required String label}) {
+  Widget _navItem(
+    BuildContext context, {
+    required int index,
+    required IconData icon,
+    required String label,
+  }) {
     return Expanded(
       child: GestureDetector(
         onTap: () {
