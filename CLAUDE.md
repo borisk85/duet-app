@@ -1,3 +1,5 @@
+@C:\Users\bkoma\.claude\BASE_RULES.md
+
 # Duet — AI Drink Pairing App
 
 ## Product overview
@@ -110,7 +112,6 @@ Key services:
 - 8px grid (8, 16, 24, 32...)
 - Haptic feedback on key actions
 - Russian UI language — address user as вы/ваш
-- No Ё — use Е only
 
 ## Error handling
 
@@ -127,3 +128,9 @@ All SnackBars: `Colors.red.shade800`, floating, rounded.
 ## Public texts and marketing
 
 All approved public-facing texts are in `docs/MARKETING.md`. Do not write app store copy, taglines, or descriptions from scratch — check that file first.
+
+## Working notes
+
+Working queue and session memory live in `STATE.md` (see BASE_RULES §3, §11).
+
+Exception to BASE_RULES §1: `docs/BACKLOG.md` is a product document — v2+ ideas, not a working queue. It stays as is and is not merged into `STATE.md`.
