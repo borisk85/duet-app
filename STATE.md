@@ -10,11 +10,12 @@
 - [ ] RevenueCat — реальная интеграция вместо заглушки paywall (ждем approval Internal Testing в Google Play)
 
 ## ОЧЕРЕДЬ (по порядку)
-1. Закоммитить незакрытый хвост: dart format result_screen.dart, блок assumptions в CLAUDE.md, docs/MARKET_RESEARCH_CIS_2026-07.md
-2. Бренд в карточке избранного обрезается (favorites_screen.dart:345-350) — две строки вместо одной с ellipsis. Решено делать до релиза
-3. Google Play — довести стор-листинг до публикации (тексты из docs/MARKETING.md, иконка 512px готова)
+1. Бренд в карточке избранного обрезается (favorites_screen.dart:345-350) — две строки вместо одной с ellipsis. Решено делать до релиза
+2. Google Play — довести стор-листинг до публикации (тексты из docs/MARKETING.md, иконка 512px готова)
 
 ## СДЕЛАНО (с датой, новое сверху)
+- [2026-07-20] main запушен в origin (ac824d8..32e9b1e)
+- [2026-07-20] Миграция на BASE_RULES + STATE.md; хвост закоммичен (формат result_screen, market research)
 - [2026-07] README и проектная документация для портфолио
 - [2026-07] Скриншоты Play Store + bump 1.0.1+3 для AAB
 - [2026-07] Промпт: сегмент вместо бюджета, разнообразие вина, антиповтор брендов и категорий, канонические пары
@@ -31,4 +32,5 @@
 - Публичные тексты — только из docs/MARKETING.md
 
 ## СЛЕДУЮЩИЙ ШАГ ПОСЛЕ ПЕРЕРЫВА
-- Проверить статус Internal Testing в Google Play Console; если approved — начинать интеграцию RevenueCat
+- Взять задачу 1 из очереди: бренд в карточке избранного. Boris сказал «вернемся позже» — план правки UI показать до кода (BASE_RULES §9).
+- Параллельно проверить статус Internal Testing в Google Play Console; если approved — разблокируется RevenueCat.
